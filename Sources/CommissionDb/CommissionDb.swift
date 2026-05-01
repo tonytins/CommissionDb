@@ -5,13 +5,14 @@ func csvExport(buyer: String, reference: String, desc: String = "",
                payment: String, fee: String,
                isYch: Bool = false, title: String = "", slot: Int = 0)
 {
-    let commHeader = "Buyer,Reference,Payment,Description,Fee"
-    let ychHeader = "Buyer,Reference,Slot,Payment,Fee"
+    let commHeader = "Date,Buyer,Reference,Payment,Description,Fee"
+    let ychHeader = "Date,Buyer,Reference,Slot,Payment,Fee"
+    let date = Date()
 
     switch isYch {
     case true:
         let ychCsv = """
-        "\(title)","\(buyer)","\(reference)","\(payment)","\(slot)","\(fee)"
+        "\(date)","\(title)","\(buyer)","\(reference)","\(payment)","\(slot)","\(fee)"
         """
         let ych = """
         \(ychHeader)
@@ -20,7 +21,7 @@ func csvExport(buyer: String, reference: String, desc: String = "",
         print(ych)
     default:
         let commCsv = """
-        "\(buyer)","\(reference)","\(payment)","\(desc)","\(fee)"
+        "\(date)","\(buyer)","\(reference)","\(payment)","\(desc)","\(fee)"
         """
         let comm = """
         \(commHeader)

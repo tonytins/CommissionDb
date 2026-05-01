@@ -2,7 +2,7 @@
 
 > ℹ️ This is currently being rewritten in Swift.
 
-Commission Database, aka `cdb`, is a command line application for keeping track of commission and YCH transactions from a database. The information can later be exported to a CSV for modified externally from a spreadsheet program.
+Commission Database, aka `cdb`, is a command line application for keeping track of commissions and YCH transactions. The information can later be exported to a CSV for modified externally from a spreadsheet program.
 
 ## Requirements
 
