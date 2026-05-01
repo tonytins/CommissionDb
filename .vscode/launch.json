@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:commgr}",
+            "name": "Debug cdb",
+            "target": "cdb",
+            "configuration": "debug",
+            "preLaunchTask": "swift: Build Debug cdb"
+        },
+        {
+            "type": "swift",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:commgr}",
+            "name": "Release cdb",
+            "target": "cdb",
+            "configuration": "release",
+            "preLaunchTask": "swift: Build Release cdb"
+        }
+    ]
+}

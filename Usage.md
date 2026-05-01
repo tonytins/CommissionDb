@@ -1,27 +1,8 @@
 # Usage
 
-```txt
-USAGE:
-    cdb order [OPTIONS] --buyer <buyer> --fee <fee> --payment <payment>
+## Commissions
 
-FLAGS:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
-
-OPTIONS:
-    -b, --buyer <buyer>                
-    -c, --currency <currency>          
-    -d, --description <description>    
-    -f, --fee <fee>                    
-    -p, --payment <payment>            
-    -r, --reference <reference>        
-    -s, --slot <slot>                  
-    -y, --ych <ych>    
-```
-
-### Commissions
-
-``cdb order -b <buyer> -f <fee> -d <description> -p <payment>``
+``cdb -b <buyer> -f <fee> -d <description> -p <payment>``
 
 Example: ``cdb order -b "Alberta Mann" -f 43 -p "5458-2118-9194-8514" -d "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ut pretium enim. Sed a neque."``
 
@@ -32,16 +13,16 @@ Date,Client,Fee,Payment,Description
 
 ## YCH
 
-``cdb order --b <buyer> -f <fee> -r <reference> -d <description> -p <payment> -y <ych> -s <slot>``
+``cdb ych --b <buyer> -f <fee> -r <reference> -d <description> -p <payment> -y <ych> -s <slot>``
 
-Example: ``cdb order -b "Bessie Hettinger" -s 4 -f 25 -p "31VLNZXfcpoA68wPRuWSdrmT3jv5k" -r "https://www.furaffinity.net/view/20700210/" -y Synthesize -c SEK``
+Example: ``cdb ych -b "Bessie Hettinger" -s 4 -f 25 -p "31VLNZXfcpoA68wPRuWSdrmT3jv5k" -r "https://www.furaffinity.net/view/20700210/" -y Synthesize -c SEK``
 
 ```csv
 Date,Client,Reference,Fee,Payment,YCH,Slot
 10/26/2020,Bessie Hettinger,https://www.furaffinity.net/view/20700210/,"25,00kr",31VLNZXfcpoA68wPRuWSdrmT3jv5k,Synthesize,4
 ```
 
-### Raffle
+## Raffle
 
 TBA. 
 
