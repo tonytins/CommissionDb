@@ -1,8 +1,34 @@
 import ArgumentParser
 import Foundation
 
-func receipt(buyer _: String, reference _: String, currency _: String, desc _: String,
-             fee _: String, isYch _: Bool = false, slot _: Int = 0) {}
+func csvExport(buyer: String, reference: String, desc: String = "",
+               payment: String, fee: String,
+               isYch: Bool = false, title: String = "", slot: Int = 0)
+{
+    let commHeader = "Buyer,Reference,Payment,Description,Fee"
+    let ychHeader = "Buyer,Reference,Slot,Payment,Fee"
+
+    switch isYch {
+    case true:
+        let ychCsv = """
+        "\(title)","\(buyer)","\(reference)","\(payment)","\(slot)","\(fee)"
+        """
+        let ych = """
+        \(ychHeader)
+        \(ychCsv)
+        """
+        print(ych)
+    default:
+        let commCsv = """
+        "\(buyer)","\(reference)","\(payment)","\(desc)","\(fee)"
+        """
+        let comm = """
+        \(commHeader)
+        \(commCsv)
+        """
+        print(comm)
+    }
+}
 
 extension CommissionDb {
     struct Ych: ParsableCommand {
@@ -17,10 +43,10 @@ extension CommissionDb {
         var reference: String
 
         @Option(name: .shortAndLong)
-        var currency: String
+        var payment: String
 
         @Option(name: .shortAndLong)
-        var description: String
+        var title: String
 
         @Option(name: .long)
         var bid: String
@@ -29,9 +55,9 @@ extension CommissionDb {
         var slot: Int
 
         mutating func run() {
-            receipt(buyer: buyer, reference: reference,
-                    currency: currency, desc: description,
-                    fee: bid, isYch: true, slot: slot)
+            csvExport(buyer: buyer, reference: reference,
+                      payment: payment, fee: bid,
+                      isYch: true, title: title, slot: slot)
         }
     }
 }
@@ -45,7 +71,7 @@ struct CommissionDb: ParsableCommand {
     var reference: String
 
     @Option(name: .shortAndLong)
-    var currency: String
+    var payment: String
 
     @Option(name: .shortAndLong)
     var description: String
@@ -54,8 +80,7 @@ struct CommissionDb: ParsableCommand {
     var fee: String
 
     mutating func run() throws {
-        receipt(buyer: buyer, reference: reference,
-                currency: currency, desc: description, fee: fee)
-        print("Hello, world!")
+        csvExport(buyer: buyer, reference: reference, desc: description,
+                  payment: payment, fee: fee)
     }
 }

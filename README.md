@@ -12,6 +12,7 @@ Commission Database, aka `cdb`, is a command line application for keeping track 
 
 # To-Do
 
+- [ ] YCH support
 - [ ] Export to CSV
 - [ ] Write to Database
 
