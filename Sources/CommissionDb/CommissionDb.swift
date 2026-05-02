@@ -1,27 +1,37 @@
 import ArgumentParser
 import Foundation
 
-func csvExport(buyer: String, reference: String, desc: String = "",
+func csvExport(client: String, reference: String, desc: String = "",
                payment: String, fee: String,
                isYch: Bool = false, title: String = "", slot: Int = 0)
 {
-    let commHeader = "Date,Buyer,Reference,Payment,Description,Fee"
-    let ychHeader = "Date,Buyer,Reference,Slot,Payment,Fee"
+    let commHeader = "Date,Client,Reference,Payment,Description,Fee"
+    let ychHeader = "Date,Client,Reference,Slot,Payment,Fee"
     let date = Date()
-
+    var transiactions = [String]() // Placeholder until we read and write to a file
+    
     switch isYch {
     case true:
+        for transaction in transiactions {
+            if !transaction.contains(ychHeader)
+            {
+                transiactions.append(ychHeader)
+            }
+        }
         let ychCsv = """
-        "\(date)","\(title)","\(buyer)","\(reference)","\(payment)","\(slot)","\(fee)"
+        "\(date)","\(title)","\(client)","\(reference)","\(payment)","\(slot)","\(fee)"
         """
-        let ych = """
-        \(ychHeader)
-        \(ychCsv)
-        """
-        print(ych)
+        transiactions.append(ychCsv)
+        print(transiactions)
     default:
+        for transaction in transiactions {
+            if !transaction.contains(commHeader)
+            {
+                transiactions.append(commHeader)
+            }
+        }
         let commCsv = """
-        "\(date)","\(buyer)","\(reference)","\(payment)","\(desc)","\(fee)"
+        "\(date)","\(client)","\(reference)","\(payment)","\(desc)","\(fee)"
         """
         let comm = """
         \(commHeader)
@@ -38,7 +48,7 @@ extension CommissionDb {
         )
 
         @Option(name: .shortAndLong)
-        var buyer: String
+        var client: String
 
         @Option(name: .shortAndLong)
         var reference: String
@@ -56,7 +66,7 @@ extension CommissionDb {
         var slot: Int
 
         mutating func run() {
-            csvExport(buyer: buyer, reference: reference,
+            csvExport(client: client, reference: reference,
                       payment: payment, fee: bid,
                       isYch: true, title: title, slot: slot)
         }
@@ -66,7 +76,7 @@ extension CommissionDb {
 @main
 struct CommissionDb: ParsableCommand {
     @Option(name: .shortAndLong)
-    var buyer: String
+    var client: String
 
     @Option(name: .shortAndLong)
     var reference: String
@@ -81,7 +91,7 @@ struct CommissionDb: ParsableCommand {
     var fee: String
 
     mutating func run() throws {
-        csvExport(buyer: buyer, reference: reference, desc: description,
+        csvExport(client: client, reference: reference, desc: description,
                   payment: payment, fee: fee)
     }
 }
