@@ -17,6 +17,10 @@ Use this checklist when reviewing a change to cdb.
   existing command surface? Could the change break existing callers or scripts?
 - Is CSV output format-correct (quoting, field order, header presence) for both
   commission and YCH paths?
+- If the schema or an enum changed, do `commissiondb.sql` and the Swift enum
+  raw values still agree? Does the change need a migration for existing
+  databases?
+- Do tests use a temporary database rather than the user's real one?
 - Are errors reported through `ArgumentParser`'s `ValidationError` or typed
   `throw`s — not silent defaults or `try!`?
 - Do tests cover the changed behavior? Are there cases that need a live

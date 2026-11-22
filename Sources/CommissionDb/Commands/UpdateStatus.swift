@@ -11,19 +11,11 @@ struct UpdateStatus: ParsableCommand {
     @Argument(help: "Record ID to update.")
     var id: Int
 
-    @Option(name: .long, help: "New status: pending, paid, cancelled, refunded.")
-    var set: String
-
-    mutating func validate() throws {
-        guard Status(rawValue: set) != nil else {
-            let valid = Status.allCases.map(\.rawValue).joined(separator: ", ")
-            throw ValidationError("Invalid status '\(set)'. Valid values: \(valid).")
-        }
-    }
+    @Option(name: .long, help: "New status.")
+    var set: Status
 
     mutating func run() throws {
-        let dbURL = try AppDataPath.databaseURL
-        let db = Commissiondb(url: dbURL)
+        let db = try Commissiondb.open()
 
         guard var record = try db.records.find(id) else {
             print("No record with ID \(id).")
@@ -31,8 +23,8 @@ struct UpdateStatus: ParsableCommand {
         }
 
         let previous = record.status
-        record.status = set
+        record.status = set.rawValue
         try db.update(record)
-        print("Record #\(id): \(previous) → \(set).")
+        print("Record #\(id): \(previous) → \(set.rawValue).")
     }
 }

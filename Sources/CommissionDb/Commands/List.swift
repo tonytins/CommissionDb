@@ -1,5 +1,4 @@
 import ArgumentParser
-import Lighter
 
 /// Lists stored records, optionally filtered by status or type.
 struct List: ParsableCommand {
@@ -8,32 +7,15 @@ struct List: ParsableCommand {
         abstract: "List commission and YCH records."
     )
 
-    @Option(name: .shortAndLong, help: "Filter by status: pending, paid, cancelled, refunded.")
-    var status: String?
+    @Option(name: .shortAndLong, help: "Filter by status.")
+    var status: Status?
 
-    @Option(name: .shortAndLong, help: "Filter by type: commission, ych.")
-    var type: String?
-
-    mutating func validate() throws {
-        if let s = status, Status(rawValue: s) == nil {
-            let valid = Status.allCases.map(\.rawValue).joined(separator: ", ")
-            throw ValidationError("Invalid status '\(s)'. Valid values: \(valid).")
-        }
-        if let t = type, RecordType(rawValue: t) == nil {
-            let valid = RecordType.allCases.map(\.rawValue).joined(separator: ", ")
-            throw ValidationError("Invalid type '\(t)'. Valid values: \(valid).")
-        }
-    }
+    @Option(name: .shortAndLong, help: "Filter by type.")
+    var type: RecordType?
 
     mutating func run() throws {
-        let dbURL = try AppDataPath.databaseURL
-        let db = Commissiondb(url: dbURL)
-
-        let records = try db.records.fetch { (record: Records) in
-            let statusMatch = status.map { record.status == $0 } ?? true
-            let typeMatch   = type.map   { record.type   == $0 } ?? true
-            return statusMatch && typeMatch
-        }
+        let db = try Commissiondb.open()
+        let records = try db.fetchRecords(status: status, type: type)
 
         guard !records.isEmpty else {
             print("No records found.")
@@ -41,13 +23,15 @@ struct List: ParsableCommand {
         }
 
         for r in records {
-            let typeLabel = r.type.capitalized
-            let ychInfo   = r.ychTitle.map { " — \($0) slot \(r.slot ?? 0)" } ?? ""
+            let typeLabel = RecordType(rawValue: r.type)?.label ?? r.type
+            let ychInfo   = r.ychTitle.map { title in
+                r.slot.map { " — \(title) slot \($0)" } ?? " — \(title)"
+            } ?? ""
             print("#\(r.id) [\(r.status.uppercased())] \(typeLabel)\(ychInfo)")
             print("  Client:      \(r.client)")
             print("  Reference:   \(r.reference)")
             if !r.description.isEmpty { print("  Description: \(r.description)") }
-            print("  Fee:         \(r.fee)")
+            print("  Fee:         \(Format.fee(r.fee))")
             print("  Date:        \(r.date)")
             print()
         }

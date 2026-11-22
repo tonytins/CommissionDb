@@ -30,8 +30,8 @@ struct Add: ParsableCommand {
     @Option(name: .long, help: "YCH slot number (required together with --ych-title for a YCH entry).")
     var slot: Int?
 
-    @Option(name: .shortAndLong, help: "Initial status: pending, paid, cancelled, refunded.")
-    var status: String = "pending"
+    @Option(name: .shortAndLong, help: "Initial status.")
+    var status: Status = .pending
 
     mutating func validate() throws {
         // ych-title and slot must both be present or both absent.
@@ -45,32 +45,26 @@ struct Add: ParsableCommand {
         guard fee >= 0 else {
             throw ValidationError("Fee must be a non-negative number.")
         }
-
-        guard Status(rawValue: status) != nil else {
-            let valid = Status.allCases.map(\.rawValue).joined(separator: ", ")
-            throw ValidationError("Invalid status '\(status)'. Valid values: \(valid).")
-        }
     }
 
     mutating func run() throws {
-        let dbURL = try AppDataPath.databaseURL
-        let db = Commissiondb(url: dbURL)
+        let db = try Commissiondb.open()
 
-        let type_ = ychTitle != nil ? RecordType.ych.rawValue : RecordType.commission.rawValue
+        let type_ = ychTitle != nil ? RecordType.ych : .commission
 
         let record = Records(
             date: ISO8601DateFormatter().string(from: Date()),
-            type: type_,
+            type: type_.rawValue,
             client: client,
             reference: reference,
             description: description,
             fee: fee,
             ychTitle: ychTitle,
             slot: slot,
-            status: status
+            status: status.rawValue
         )
 
         let inserted = try db.insert(record)
-        print("Added \(type_) #\(inserted.id) for \(client).")
+        print("Added \(type_.label) #\(inserted.id) for \(client).")
     }
 }

@@ -5,7 +5,8 @@ import GitVersion
 struct CommissionDb: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "cdb",
-        abstract: "Commission Database \(GitVersion.version) — track commissions and YCH transactions.",
+        abstract: "Commission Database — track commissions and YCH transactions.",
+        version: GitVersion.version,
         subcommands: [Add.self, List.self, Export.self, UpdateStatus.self],
         defaultSubcommand: List.self
     )

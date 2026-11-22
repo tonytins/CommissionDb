@@ -39,33 +39,30 @@ func recordTypeRoundTrip() {
     }
 }
 
-// MARK: - CSV quoting
+// MARK: - CSV
 
-/// Exercises the RFC 4180 quoting logic from Export without touching the DB.
-/// We call the private helper indirectly by reproducing it here — the real
-/// test is that the output is correct; Export's own test would need a live DB.
-private func csvQuote(_ value: String) -> String {
-    let escaped = value.replacingOccurrences(of: "\"", with: "\"\"")
-    return "\"\(escaped)\""
+@Test("CSV field wraps plain strings in double-quotes")
+func csvFieldPlain() {
+    #expect(CSV.field("hello") == "\"hello\"")
 }
 
-@Test("CSV quoting wraps plain strings in double-quotes")
-func csvQuotePlain() {
-    #expect(csvQuote("hello") == "\"hello\"")
+@Test("CSV field escapes internal double-quotes")
+func csvFieldEscapesQuotes() {
+    #expect(CSV.field("say \"hi\"") == "\"say \"\"hi\"\"\"")
 }
 
-@Test("CSV quoting escapes internal double-quotes")
-func csvQuoteEscapesQuotes() {
-    #expect(csvQuote("say \"hi\"") == "\"say \"\"hi\"\"\"")
+@Test("CSV field handles empty strings")
+func csvFieldEmpty() {
+    #expect(CSV.field("") == "\"\"")
 }
 
-@Test("CSV quoting handles empty strings")
-func csvQuoteEmpty() {
-    #expect(csvQuote("") == "\"\"")
+@Test("CSV field preserves commas and newlines without extra escaping")
+func csvFieldSpecialChars() {
+    #expect(CSV.field("a,b") == "\"a,b\"")
+    #expect(CSV.field("line1\nline2") == "\"line1\nline2\"")
 }
 
-@Test("CSV quoting preserves commas and newlines without extra escaping")
-func csvQuoteSpecialChars() {
-    #expect(csvQuote("a,b") == "\"a,b\"")
-    #expect(csvQuote("line1\nline2") == "\"line1\nline2\"")
+@Test("CSV row joins quoted fields with commas")
+func csvRowJoinsFields() {
+    #expect(CSV.row(["a", "b,c", ""]) == "\"a\",\"b,c\",\"\"")
 }
