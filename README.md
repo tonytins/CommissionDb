@@ -4,27 +4,12 @@
 
 Commission Database, aka `cdb`, is a command line application for keeping track of commissions and YCH transactions. The information can later be exported to a CSV for modified externally from a spreadsheet program.
 
-## Minimum Requirements
-
-### Development
-
-- Swift 6 or later
-
-### Deployment
-
-| Target  | Version |
-| ------- | ------- |
-| macOS   | 10.13   |
-| Windows | 10      |
-| Ubuntu  | 20.04   |
-| Fedora  | 39      |
-| Debian  | 12      |
-
 ## To-Do
 
 - [ ] YCH support
 - [ ] Export to CSV
 - [ ] Write to Database
+- [ ] Raffles ([#1](https://github.com/tonytins/CommissionDb/issues/1))
 
 ## License
 

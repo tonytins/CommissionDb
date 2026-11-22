@@ -4,8 +4,7 @@
 
 Commission Database, aka **cdb**, is a Swift 6 command-line tool for tracking
 commissions and YCH transactions and exporting them to CSV. The package name is
-`CommissionDb`; the executable is `cdb`. It targets macOS 10.13, Windows 10,
-Ubuntu 20.04, Fedora 39, and Debian 12.
+`CommissionDb`; the executable is `cdb`.
 
 ```
 Sources/CommissionDb/   # executable target
