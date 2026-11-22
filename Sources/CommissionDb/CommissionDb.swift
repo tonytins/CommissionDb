@@ -7,7 +7,9 @@ struct CommissionDb: ParsableCommand {
         commandName: "cdb",
         abstract: "Commission Database — track commissions and YCH transactions.",
         version: GitVersion.version,
-        subcommands: [Add.self, List.self, Export.self, UpdateStatus.self],
+        subcommands: [
+            Add.self, List.self, Export.self, UpdateStatus.self, Raffle.self,
+        ],
         defaultSubcommand: List.self
     )
 }

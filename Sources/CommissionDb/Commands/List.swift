@@ -24,10 +24,11 @@ struct List: ParsableCommand {
 
         for r in records {
             let typeLabel = RecordType(rawValue: r.type)?.label ?? r.type
-            let ychInfo   = r.ychTitle.map { title in
-                r.slot.map { " — \(title) slot \($0)" } ?? " — \(title)"
-            } ?? ""
-            print("#\(r.id) [\(r.status.uppercased())] \(typeLabel)\(ychInfo)")
+            let titleText = r.title.map { " — \($0)" } ?? ""
+            let slotText  = r.type == RecordType.ych.rawValue
+                          ? r.slot.map { " slot \($0)" } ?? ""
+                          : ""
+            print("#\(r.id) [\(r.status.uppercased())] \(typeLabel)\(titleText)\(slotText)")
             print("  Client:      \(r.client)")
             print("  Reference:   \(r.reference)")
             if !r.description.isEmpty { print("  Description: \(r.description)") }

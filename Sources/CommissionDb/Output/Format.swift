@@ -6,4 +6,9 @@ enum Format {
     static func fee(_ value: Double) -> String {
         String(format: "%.2f", value)
     }
+
+    /// Formats a ticket price, showing free entries as `"free"`.
+    static func price(_ value: Double) -> String {
+        value > 0 ? fee(value) : "free"
+    }
 }

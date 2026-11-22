@@ -2,7 +2,7 @@ import ArgumentParser
 
 /// Exports records as CSV to stdout, optionally filtered by status or type.
 ///
-/// Columns: Date,Type,Client,Reference,Description,Fee,YCH,Slot,Status
+/// Columns: Date,Type,Client,Reference,Description,Fee,Title,Slot,Status
 struct Export: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "export",
@@ -19,7 +19,7 @@ struct Export: ParsableCommand {
         let db = try Commissiondb.open()
         let records = try db.fetchRecords(status: status, type: type)
 
-        print("Date,Type,Client,Reference,Description,Fee,YCH,Slot,Status")
+        print("Date,Type,Client,Reference,Description,Fee,Title,Slot,Status")
         for r in records {
             print(CSV.row([
                 r.date,
@@ -28,7 +28,7 @@ struct Export: ParsableCommand {
                 r.reference,
                 r.description,
                 Format.fee(r.fee),
-                r.ychTitle ?? "",
+                r.title ?? "",
                 r.slot.map(String.init) ?? "",
                 r.status,
             ]))

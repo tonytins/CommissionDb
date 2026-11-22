@@ -26,7 +26,7 @@ private func makeRecord(
         reference: "https://example.com/ref",
         description: "Test description",
         fee: 12.5,
-        ychTitle: type == .ych ? "Synthesize" : nil,
+        title: type == .ych ? "Synthesize" : nil,
         slot: type == .ych ? 4 : nil,
         status: status.rawValue
     )
