@@ -3,35 +3,6 @@ import Lighter
 import Testing
 @testable import CommissionDb
 
-/// Creates a throwaway database file and removes it when the test finishes.
-private func withTemporaryDatabase<T>(
-    _ body: (Commissiondb) throws -> T
-) throws -> T {
-    let url = FileManager.default.temporaryDirectory
-        .appendingPathComponent("cdb-test-\(UUID().uuidString)")
-        .appendingPathExtension("sqlite3")
-    defer { try? FileManager.default.removeItem(at: url) }
-    return try body(try Commissiondb.bootstrap(at: url))
-}
-
-private func makeRecord(
-    client: String = "Test Client",
-    type: RecordType = .commission,
-    status: Status = .pending
-) -> Records {
-    Records(
-        date: "2026-01-01T00:00:00Z",
-        type: type.rawValue,
-        client: client,
-        reference: "https://example.com/ref",
-        description: "Test description",
-        fee: 12.5,
-        title: type == .ych ? "Synthesize" : nil,
-        slot: type == .ych ? 4 : nil,
-        status: status.rawValue
-    )
-}
-
 @Test("Bootstrap creates the schema and round-trips a record")
 func databaseRoundTrip() throws {
     try withTemporaryDatabase { db in

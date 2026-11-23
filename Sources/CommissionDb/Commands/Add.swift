@@ -1,5 +1,4 @@
 import ArgumentParser
-import Foundation
 import Lighter
 
 /// Adds a new commission or YCH record to the database.
@@ -41,12 +40,11 @@ struct Add: ParsableCommand {
 
     mutating func run() throws {
         let db = try Commissiondb.open()
-
-        let type_ = slot != nil ? RecordType.ych : .commission
+        let type = slot != nil ? RecordType.ych : .commission
 
         let record = Records(
-            date: ISO8601DateFormatter().string(from: Date()),
-            type: type_.rawValue,
+            date: Timestamps.now(),
+            type: type.rawValue,
             client: client,
             reference: reference,
             description: description,
@@ -57,6 +55,6 @@ struct Add: ParsableCommand {
         )
 
         let inserted = try db.insert(record)
-        print("Added \(type_.label) #\(inserted.id) for \(client).")
+        print("Added \(type.label) #\(inserted.id) for \(client).")
     }
 }

@@ -4,7 +4,7 @@ import Lighter
 ///
 /// Messages are written for the person running the command, so they name the
 /// raffle, its current state, and what was expected.
-enum RaffleError: Error, CustomStringConvertible {
+enum RaffleError: Error, Equatable, CustomStringConvertible {
     case notFound(Int)
     case closedForEntries(id: Int, status: String)
     case notOpenForDraw(id: Int, status: String)
@@ -39,7 +39,7 @@ enum RaffleError: Error, CustomStringConvertible {
 extension Commissiondb {
     /// Fetches a raffle, or throws `RaffleError.notFound`.
     func raffle(_ id: Int) throws -> Raffles {
-        guard let raffle = try raffles.find(id) else {
+        guard let raffle = try self.raffles.find(id) else {
             throw RaffleError.notFound(id)
         }
         return raffle
@@ -130,7 +130,7 @@ extension Commissiondb {
 
     /// Turns every winner of a drawn raffle into a pending fee-0 record.
     ///
-    /// Returns the created records in winner order and moves the raffle to
+    /// Returns the created records in entry order and moves the raffle to
     /// `fulfilled`.
     @discardableResult
     func fulfill(_ raffleId: Int, type: RecordType) throws -> [Records] {

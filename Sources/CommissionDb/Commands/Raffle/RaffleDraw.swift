@@ -26,13 +26,13 @@ struct RaffleDraw: ParsableCommand {
         let raffle = try db.raffle(raffleId)
         let entries = try db.fetchEntries(raffleId: raffleId)
         let totalTickets = entries.reduce(0) { $0 + $1.tickets }
-        let winnerWord = picked.count == 1 ? "winner" : "winners"
+        let winnerWord = Format.count(picked.count, "winner")
 
-        print("Drew \(picked.count) \(winnerWord) for raffle #\(raffleId) \"\(raffle.title)\".")
+        print("Drew \(winnerWord) for raffle #\(raffleId) \"\(raffle.title)\".")
         print("Entries: \(entries.count), tickets: \(totalTickets)")
         for entry in picked {
-            let ticketWord = entry.tickets == 1 ? "ticket" : "tickets"
-            print("  #\(entry.id) \(entry.name) (\(entry.tickets) \(ticketWord))")
+            let ticketWord = Format.count(entry.tickets, "ticket")
+            print("  #\(entry.id) \(entry.name) (\(ticketWord))")
         }
     }
 }

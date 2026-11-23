@@ -9,15 +9,33 @@ extension Commissiondb {
 
     /// Opens the database at `url`, migrating an existing file if needed.
     ///
-    /// A missing file is created with the latest schema by `bootstrap`, which
-    /// also records the schema version. An existing file is migrated in place.
+    /// A missing or empty file is created with the latest schema by
+    /// `bootstrap`, which also records the schema version. An existing file is
+    /// migrated in place.
     static func open(at url: URL) throws -> Commissiondb {
         let exists = FileManager.default.fileExists(atPath: url.path)
+        let isEmpty = exists && fileSize(at: url) == 0
+
+        if isEmpty {
+            // A zero-byte file is not a database; start it fresh.
+            try FileManager.default.removeItem(at: url)
+        }
+
         let db = try bootstrap(at: url)
-        if exists {
+        if exists, !isEmpty {
             try Migrations.apply(to: db)
         }
         return db
+    }
+
+    /// The size of the file at `url`, or 0 if it cannot be read.
+    private static func fileSize(at url: URL) -> Int {
+        do {
+            let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            return (attributes[.size] as? Int) ?? 0
+        } catch {
+            return 0
+        }
     }
 
     /// Fetches records, optionally filtered by status and type.

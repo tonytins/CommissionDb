@@ -1,8 +1,8 @@
 # Commission Database (Working Title)
 
-> ℹ️ This is currently being rewritten in Swift. For the original Rust versions, see the `rust/alpha2` and `rust/alpha1` branches. 
+> This is currently being rewritten in Swift. For the original Rust versions, see the `rust/alpha2` and `rust/alpha1` branches. 
 
-Commission Database, aka `cdb`, is a command line application for keeping track of commissions and YCH transactions. Records are stored in a local SQLite database and can be exported to CSV for further use in a spreadsheet program.
+Commission Database, aka `cdb`, is a command line application for keeping track of commissions, YCH transactions, and art raffles. Records are stored in a local SQLite database and can be exported to CSV for further use in a spreadsheet program.
 
 ## Building
 
@@ -19,6 +19,7 @@ Run the test suite with `swift test`.
 
 ```sh
 cdb add -c "Alberta Mann" -r "https://www.furaffinity.net/view/64746038/" -f 43
+cdb raffle add --title "Synthesize" --prize "full-body YCH"
 cdb list
 cdb export > commissions.csv
 ```
@@ -30,7 +31,7 @@ See [Usage.md](Usage.md) for the full command reference, storage location, and C
 - [x] YCH support
 - [x] Export to CSV
 - [x] Write to Database
-- [ ] Raffles ([#1](https://github.com/tonytins/CommissionDb/issues/1))
+- [x] Raffles ([#1](https://github.com/tonytins/CommissionDb/issues/1))
 
 ## License
 

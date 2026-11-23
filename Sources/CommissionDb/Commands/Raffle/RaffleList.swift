@@ -26,8 +26,9 @@ struct RaffleList: ParsableCommand {
 
             print("#\(raffle.id) [\(raffle.status.uppercased())] \(raffle.title)")
             if !raffle.prize.isEmpty { print("  Prize:   \(raffle.prize)") }
-            print("  Tickets: \(Format.price(raffle.ticketPrice))")
-            print("  Entries: \(entries.count) (\(totalTickets) tickets)")
+            print("  Price:   \(Format.pricePerTicket(raffle.ticketPrice))")
+            print("  Entries: \(Format.count(entries.count, "entry", "entries"))"
+                  + " (\(Format.count(totalTickets, "ticket")))")
             if !winners.isEmpty {
                 print("  Winners: \(winners.joined(separator: ", "))")
             }

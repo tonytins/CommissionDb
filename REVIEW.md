@@ -12,15 +12,23 @@ Use this checklist when reviewing a change to cdb.
 ## Review Checklist
 
 - Does the behavior match the stated intent, including edge cases such as
-  missing options, empty strings, and invalid fee or slot values?
+  missing options, empty strings, invalid fees or slots, and raffle lifecycle
+  mistakes (entering a closed raffle, drawing twice, fulfilling before a draw)?
 - Are CLI flag names, defaults, and help text clear and consistent with the
   existing command surface? Could the change break existing callers or scripts?
 - Is CSV output format-correct (quoting, field order, header presence) for both
   commission and YCH paths?
 - If the schema or an enum changed, do `commissiondb.sql` and the Swift enum
-  raw values still agree? Does the change need a migration for existing
-  databases?
-- Do tests use a temporary database rather than the user's real one?
+  raw values still agree? Does `PRAGMA user_version` change, and is there a
+  migration step that preserves existing rows? Was an already-shipped migration
+  step edited?
+- Do raffle operations leave the database consistent on failure? Entry batches
+  should be all-or-nothing, and a draw or fulfill should either complete or
+  change nothing.
+- Do tests use a temporary database rather than the user's real one? Is the
+  weighted draw tested with a seeded generator rather than by chance?
+- Does a migration test start from the previous schema and check that old data
+  survives?
 - Are errors reported through `ArgumentParser`'s `ValidationError` or typed
   `throw`s — not silent defaults or `try!`?
 - Do tests cover the changed behavior? Are there cases that need a live

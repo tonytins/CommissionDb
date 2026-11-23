@@ -24,16 +24,18 @@ struct RaffleShow: ParsableCommand {
         print("#\(raffle.id) [\(raffle.status.uppercased())] \(raffle.title)")
         print("  Created: \(raffle.date)")
         if !raffle.prize.isEmpty { print("  Prize:   \(raffle.prize)") }
-        print("  Tickets: \(Format.price(raffle.ticketPrice))")
+        print("  Price:   \(Format.pricePerTicket(raffle.ticketPrice))")
         if let opens = raffle.opens { print("  Opens:   \(opens)") }
         if let ends = raffle.ends { print("  Ends:    \(ends)") }
-        print("  Entries: \(entries.count) (\(totalTickets) tickets)")
+        print("  Entries: \(Format.count(entries.count, "entry", "entries"))"
+              + " (\(Format.count(totalTickets, "ticket")))")
 
         guard !entries.isEmpty else { return }
         print()
         for entry in entries {
             let marker = entry.wonAt != nil ? " [winner]" : ""
-            print("  #\(entry.id) \(entry.name) (\(entry.tickets) tickets)\(marker)")
+            let tickets = Format.count(entry.tickets, "ticket")
+            print("  #\(entry.id) \(entry.name) (\(tickets))\(marker)")
             if !entry.reference.isEmpty {
                 print("    \(entry.reference)")
             }

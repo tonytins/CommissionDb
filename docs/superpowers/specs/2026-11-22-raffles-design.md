@@ -1,7 +1,7 @@
 # Art Raffles — Design
 
 Date: 2026-11-22
-Status: draft for review
+Status: implemented (2026-11-23)
 
 ## Intent
 
@@ -201,18 +201,24 @@ Sources/CommissionDb/
                                 # RaffleFulfill, RaffleCancel
   Model/
     RaffleStatus.swift          # open, drawn, fulfilled, cancelled
-    RaffleDraw.swift            # weighted selection, RNG-injectable
+    RafflePicker.swift          # weighted selection, RNG-injectable
+    RaffleEntryImport.swift     # text and CSV parsing
+    RaffleEntryDraft.swift      # one parsed entry
+    Timestamps.swift            # ISO 8601 now/parse/format
   Storage/
-    Database.swift              # open(at:), fetchRecords
+    Database.swift              # open(at:), fetchRecords, fetchRaffles
     Migrations.swift            # v0 -> v1
-Tests/
-  RaffleDrawTests.swift
+    Raffles.swift               # enter, draw, fulfill, cancel
+Tests/CommissionDbTests/
+  RafflePickerTests.swift
+  RaffleImportTests.swift
   RaffleCommandTests.swift      # temp-DB integration
   MigrationTests.swift
 ```
 
 Subcommand type names are prefixed (`RaffleAdd`, not `Add`) to avoid clashing
-with the existing top-level commands.
+with the existing top-level commands. Import parsing lives in `Model/` rather
+than in the command, so it can be tested without touching a database.
 
 ### Testing
 

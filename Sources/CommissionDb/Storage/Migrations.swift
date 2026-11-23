@@ -1,5 +1,20 @@
 import Lighter
 
+/// Errors raised while bringing a database file up to date.
+enum MigrationError: Error, Equatable, CustomStringConvertible {
+    case futureVersion(found: Int, supported: Int)
+
+    var description: String {
+        switch self {
+        case .futureVersion(let found, let supported):
+            return """
+            This database uses schema version \(found), but this build \
+            supports \(supported). Upgrade cdb before opening it.
+            """
+        }
+    }
+}
+
 /// In-place schema migrations for existing database files.
 ///
 /// Migrations are historical: once shipped, never edit them. Add a new step
@@ -8,6 +23,11 @@ enum Migrations {
     /// Brings `db` up to `Commissiondb.userVersion`.
     static func apply(to db: Commissiondb) throws {
         let version = try db.get(pragma: "user_version", as: Int.self)
+        if version > Commissiondb.userVersion {
+            throw MigrationError.futureVersion(
+                found: version, supported: Commissiondb.userVersion
+            )
+        }
         guard version < Commissiondb.userVersion else { return }
 
         try db.transaction { tx in

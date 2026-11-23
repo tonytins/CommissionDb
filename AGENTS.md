@@ -10,11 +10,12 @@ to CSV. The package name is `CommissionDb`; the executable is `cdb`.
 Sources/CommissionDb/
   CommissionDb.swift      # @main, subcommand registration, version
   commissiondb.sql        # schema; Enlighter generates DB types from this
-  Commands/               # one file per subcommand
-  Model/                  # Status and RecordType enums
-  Storage/                # database bootstrap and app-data path
+  Commands/               # one file per subcommand; Raffle/ groups raffle commands
+  Model/                  # enums, timestamps, raffle picking and import parsing
+  Storage/                # database bootstrap, migrations, raffle operations
   Output/                 # CSV and display formatting
 Tests/CommissionDbTests/
+docs/superpowers/specs/   # design documents for larger changes
 Package.swift
 GitVersion.txt            # version being built
 GitVersion.env            # GitVersion configuration
@@ -28,7 +29,8 @@ approval.
 Two build plugins generate source into `.build/`, so never edit those files:
 
 - `Enlighter` reads `commissiondb.sql` and generates the `Commissiondb`
-  database type, the `Records` record, and their CRUD operations.
+  database type, the `Records`, `Raffles`, and `RaffleEntries` records, and
+  their CRUD operations.
 - `GitVersionPlugin` reads `GitVersion.txt` / `GitVersion.env` and generates
   the `GitVersion` namespace.
 
@@ -52,9 +54,15 @@ for style and conventions. Where it disagrees with this file, this file wins.
 
 - The schema lives in `Sources/CommissionDb/commissiondb.sql`. Change it there,
   then let Enlighter regenerate the types; don't hand-write SQL in commands.
-- `Commissiondb.open()` (in `Storage/Database.swift`) bootstraps the database
-  and creates the schema on first use. There is no migration support yet:
-  changing an existing table's shape needs a deliberate migration plan.
+- `Commissiondb.open()` (in `Storage/Database.swift`) bootstraps a new database
+  and migrates an existing one. `commissiondb.sql` ends with
+  `PRAGMA user_version = N`; `Migrations.swift` holds the matching v0→v1 steps.
+- Migrations are historical: once a version ships, never edit its step. Add a
+  new step, bump `PRAGMA user_version`, and cover it with a test that starts
+  from the previous schema.
+- `records` holds one row per commission or YCH. Raffles have their own
+  `raffles` and `raffle_entries` tables and become `records` only on
+  fulfillment.
 - The database file lives in the platform application-support directory. Tests
   must use a temporary file, never the user's real database.
 - Enums are stored as their raw strings so the database stays readable without
