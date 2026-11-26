@@ -16,7 +16,7 @@ the way a Git client is a client of `git`: it runs the executable and renders
 what comes back, and never opens the database itself. The CLI stays the only
 writer, so migrations, validation, and the raffle draw have one home.
 
-The owner does YCH work daily, so YCH gets a view built for how a run actually
+The owner wants to do YCH work, so YCH gets a view built for how a run actually
 looks — one title, numbered slots. Raffles are out of scope; that was the
 largest piece on the CLI side and it can follow once this contract has proven
 itself.
