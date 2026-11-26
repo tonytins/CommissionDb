@@ -1,0 +1,74 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Commis.Desktop.MainWindow"
+        Title="Commis"
+        Width="960" Height="620" MinWidth="720" MinHeight="440"
+        Background="{DynamicResource PanelBrush}"
+        FontSize="14">
+  <Window.Resources>
+    <!--
+      Where the bar is the title bar on Linux, Avalonia draws the window's frame so the window manager doesn't add its
+      own title bar above. The frame keeps its edges for resizing and draws nothing else. Adapted from Roundhouse, by
+      way of Depot and S1PK.
+    -->
+    <ControlTheme x:Key="FrameOnly" TargetType="WindowDrawnDecorations">
+      <Setter Property="DefaultTitleBarHeight" Value="36"/>
+      <Setter Property="DefaultFrameThickness" Value="4"/>
+      <Setter Property="DefaultShadowThickness" Value="0"/>
+      <Setter Property="Template">
+        <WindowDrawnDecorationsTemplate>
+          <WindowDrawnDecorationsContent/>
+        </WindowDrawnDecorationsTemplate>
+      </Setter>
+    </ControlTheme>
+  </Window.Resources>
+
+  <DockPanel>
+    <!-- The bar: the title, the toolbar, and the window's buttons, in one strip. -->
+    <Border x:Name="TitleBar" DockPanel.Dock="Top" Height="36"
+            Background="{DynamicResource TitleBarBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
+            DoubleTapped="OnTitleBarDoubleTapped">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+        <TextBlock x:Name="TitleText" Text="Commis" FontWeight="SemiBold"
+                   VerticalAlignment="Center" Margin="12,0,10,0" IsHitTestVisible="False"/>
+
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
+          <Button x:Name="AddButton" Classes="toolbar" Content="Add" IsEnabled="False"/>
+          <Button x:Name="StatusButton" Classes="toolbar" Content="Status" IsEnabled="False"/>
+          <Button x:Name="ExportButton" Classes="toolbar" Content="Export" IsEnabled="False"/>
+        </StackPanel>
+
+        <!-- Windows-style buttons, drawn where Commis draws the frame itself. -->
+        <StackPanel x:Name="WindowButtons" Grid.Column="2" Orientation="Horizontal" IsVisible="False">
+          <Button x:Name="MinimizeButton" Theme="{StaticResource CaptionButton}" Click="OnMinimizeClicked">
+            <Path Data="M0,5 L10,5" Stroke="{DynamicResource TextBrush}" StrokeThickness="1" Width="10" Height="10"/>
+          </Button>
+          <Button x:Name="MaximizeButton" Theme="{StaticResource CaptionButton}" Click="OnMaximizeClicked">
+            <Path Data="M0.5,0.5 L9.5,0.5 L9.5,9.5 L0.5,9.5 Z" Stroke="{DynamicResource TextBrush}"
+                  StrokeThickness="1" Width="10" Height="10"/>
+          </Button>
+          <Button x:Name="CloseButton" Classes="caption close" Theme="{StaticResource CaptionButton}"
+                  Click="OnCloseClicked">
+            <Path Data="M0,0 L10,10 M10,0 L0,10" Stroke="{DynamicResource TextBrush}" StrokeThickness="1"
+                  Width="10" Height="10"/>
+          </Button>
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- The places: commissions, YCH, and raffles. -->
+    <Border DockPanel.Dock="Left" Width="200" Background="{DynamicResource SidebarBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0" Padding="8">
+      <ListBox x:Name="SectionList" Classes="sections"/>
+    </Border>
+
+    <Panel Margin="20,16">
+      <StackPanel Spacing="6">
+        <TextBlock x:Name="SummaryText" Classes="title"/>
+        <TextBlock x:Name="DetailText" Classes="secondary"/>
+        <TextBlock x:Name="ProblemText" Classes="problem" IsVisible="False"/>
+      </StackPanel>
+    </Panel>
+  </DockPanel>
+</Window>

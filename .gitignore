@@ -19,6 +19,13 @@ DerivedData/
 *.xcodeproj
 
 
+### .NET (the desktop app under app/) ###
+app/**/bin/
+app/**/obj/
+*.user
+.vs/
+TestResults/
+
 ### VisualStudioCode ###
 .vscode/*
 !.vscode/settings.json

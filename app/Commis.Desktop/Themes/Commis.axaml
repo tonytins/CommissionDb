@@ -1,0 +1,47 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <!-- The window's buttons: flat, 46 wide, in the corner of the bar, as Windows draws them. -->
+    <ControlTheme x:Key="CaptionButton" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="Width" Value="46"/>
+      <Setter Property="Height" Value="36"/>
+      <Setter Property="Padding" Value="0"/>
+      <Setter Property="CornerRadius" Value="0"/>
+      <Setter Property="BorderThickness" Value="0"/>
+      <Setter Property="Background" Value="Transparent"/>
+      <Setter Property="HorizontalContentAlignment" Value="Center"/>
+      <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </ControlTheme>
+  </Styles.Resources>
+
+  <Style Selector="TextBlock.title">
+    <Setter Property="FontSize" Value="17"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+  </Style>
+
+  <Style Selector="TextBlock.secondary">
+    <Setter Property="FontSize" Value="13"/>
+    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+
+  <Style Selector="TextBlock.problem">
+    <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
+    <Setter Property="TextWrapping" Value="Wrap"/>
+  </Style>
+
+  <Style Selector="Button.toolbar">
+    <Setter Property="Padding" Value="10,4"/>
+    <Setter Property="MinHeight" Value="26"/>
+  </Style>
+
+  <!-- Windows' red on the close button, so it reads as one. -->
+  <Style Selector="Button.caption.close:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="#C42B1C"/>
+  </Style>
+
+  <Style Selector="ListBox.sections">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Padding" Value="0"/>
+  </Style>
+</Styles>

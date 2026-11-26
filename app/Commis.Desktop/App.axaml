@@ -1,0 +1,10 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Commis.Desktop.App"
+             RequestedThemeVariant="Default">
+  <Application.Styles>
+    <!-- Palettes are filled from Theme/Palette.cs, so the contrast test checks the values the window draws. -->
+    <FluentTheme/>
+    <StyleInclude Source="/Themes/Commis.axaml"/>
+  </Application.Styles>
+</Application>

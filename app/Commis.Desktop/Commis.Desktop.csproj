@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Commis's window. It is a client of the commis executable, the way a Git client is a client of git: every read and
+    every change goes through the CLI, so the schema, migrations, and validation stay in one place.
+  -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <AssemblyName>Commis</AssemblyName>
+    <RootNamespace>Commis.Desktop</RootNamespace>
+    <Description>A window for Commis, which tracks commissions, YCH transactions, and art raffles.</Description>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- At Depot's and S1PK's versions, the other apps in the family. -->
+    <PackageReference Include="Avalonia" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Commis.Desktop.Tests" />
+  </ItemGroup>
+
+</Project>

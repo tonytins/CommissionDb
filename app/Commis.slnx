@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="../global.json" />
+  </Folder>
+  <Project Path="Commis.Desktop/Commis.Desktop.csproj" />
+  <Project Path="Commis.Desktop.Tests/Commis.Desktop.Tests.csproj" />
+</Solution>
