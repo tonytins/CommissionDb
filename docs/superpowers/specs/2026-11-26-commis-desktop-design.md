@@ -1,7 +1,7 @@
 # Commis Desktop — Design
 
 Date: 2026-11-26
-Status: draft
+Status: built (commissions, YCH, add, status, export); raffles not started
 
 ## Intent
 
@@ -17,9 +17,9 @@ what comes back, and never opens the database itself. The CLI stays the only
 writer, so migrations, validation, and the raffle draw have one home.
 
 The owner wants to do YCH work, so YCH gets a view built for how a run actually
-looks — one title, numbered slots. Raffles are out of scope; that was the
-largest piece on the CLI side and it can follow once this contract has proven
-itself.
+looks — one title, numbered slots. Raffles are out of scope: they aren't as
+straightforward as commissions and YCH, and how they belong in a window needs a
+broader discussion before any of it is designed.
 
 ## Goals
 
@@ -33,7 +33,8 @@ itself.
 
 ## Non-goals
 
-- Raffles: add, enter, import, draw, fulfill, cancel. Later.
+- Raffles: add, enter, import, draw, fulfill, cancel. They need a broader
+  discussion first; the section says they're coming and does nothing else.
 - Editing or deleting records. The CLI has no command for either; a window must
   not invent operations the executable cannot perform.
 - Writing SQLite directly, or any second implementation of the schema.
@@ -132,7 +133,7 @@ Rules:
 ## The window
 
 Structure, per the design language: window controls and the toolbar share one
-bar at the top; a sidebar of places on the left; content on the right; the
+bar at the top, with the app's title in the middle of it; a sidebar of places on the left; content on the right; the
 standard menus.
 
 ```

@@ -30,11 +30,13 @@
             Background="{DynamicResource TitleBarBrush}"
             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1"
             DoubleTapped="OnTitleBarDoubleTapped">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <TextBlock x:Name="TitleText" FontWeight="SemiBold"
-                   VerticalAlignment="Center" Margin="12,0,10,0" IsHitTestVisible="False"/>
+      <Grid ColumnDefinitions="*,Auto">
+        <!-- The title sits in the middle of the whole bar, under the toolbar and buttons, so it stays centred. -->
+        <TextBlock x:Name="TitleText" Grid.ColumnSpan="2" FontWeight="SemiBold" HorizontalAlignment="Center"
+                   VerticalAlignment="Center" IsHitTestVisible="False"/>
 
-        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+        <StackPanel x:Name="Toolbar" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6"
+                    Margin="8,0,0,0">
           <Button x:Name="AddButton" Classes="toolbar" IsEnabled="False" Click="OnAddClicked"/>
           <ComboBox x:Name="FilterBox" Classes="toolbar" MinWidth="130"
                     SelectionChanged="OnFilterChanged">
@@ -44,11 +46,11 @@
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
-          <Button x:Name="ExportButton" Classes="toolbar" IsEnabled="False"/>
+          <Button x:Name="ExportButton" Classes="toolbar" IsEnabled="False" Click="OnExportClicked"/>
         </StackPanel>
 
         <!-- Windows-style buttons, drawn where Commis draws the frame itself. -->
-        <StackPanel x:Name="WindowButtons" Grid.Column="2" Orientation="Horizontal" IsVisible="False">
+        <StackPanel x:Name="WindowButtons" Grid.Column="1" Orientation="Horizontal" IsVisible="False">
           <Button x:Name="MinimizeButton" Theme="{StaticResource CaptionButton}" Click="OnMinimizeClicked">
             <Path Data="M0,5 L10,5" Stroke="{DynamicResource TextBrush}" StrokeThickness="1" Width="10" Height="10"/>
           </Button>
@@ -85,12 +87,12 @@
       <TextBlock x:Name="DatabaseText" Classes="secondary" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
     </Border>
 
-    <!-- Something that went wrong, in commis's own words, above whatever was showing. -->
+    <!-- Something that went wrong, in commis's own words, or that's done, such as an export, above whatever was showing. -->
     <Border x:Name="ProblemBar" DockPanel.Dock="Top" IsVisible="False" Padding="16,8"
             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
       <Grid ColumnDefinitions="*,Auto">
         <ScrollViewer MaxHeight="96" VerticalAlignment="Center">
-          <SelectableTextBlock x:Name="ProblemText" Classes="problem"/>
+          <SelectableTextBlock x:Name="ProblemText" Classes="problem" TextWrapping="Wrap"/>
         </ScrollViewer>
         <Button x:Name="DismissButton" Grid.Column="1" Classes="toolbar" Margin="12,0,0,0" Click="OnDismissProblem"/>
       </Grid>

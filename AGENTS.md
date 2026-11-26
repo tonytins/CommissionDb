@@ -6,6 +6,11 @@ Commis is a Swift 6 command-line tool for tracking commissions and YCH
 transactions in a local SQLite database and exporting them to CSV. The package
 name is `Commis`; the executable is `commis`.
 
+`app/` holds a C# desktop window for commissions and YCH, built with Avalonia.
+It is a client of `commis`, the way a Git client is a client of `git`: it runs
+the executable for every read and change and never opens the database itself.
+The design is in `docs/superpowers/specs/2026-11-26-commis-desktop-design.md`.
+
 ```
 Sources/Commis/
   CommisCommand.swift     # @main, subcommand registration, version
@@ -15,6 +20,11 @@ Sources/Commis/
   Storage/                # database bootstrap, migrations, raffle operations
   Output/                 # CSV and display formatting
 Tests/CommisTests/
+app/
+  Commis.slnx
+  Commis.Desktop/         # the window; Records/ holds the logic tests reach
+    uitext/english.dir/   # interface text, _100_commis.cst
+  Commis.Desktop.Tests/
 docs/superpowers/specs/   # design documents for larger changes
 Package.swift
 GitVersion.txt            # version being built
@@ -23,8 +33,9 @@ Usage.md                  # CLI usage reference
 ```
 
 Approved dependencies: `swift-argument-parser`, `Lighter` (SQLite), and
-`GitVersion` (build-time versioning). New dependencies need the owner's
-approval.
+`GitVersion` (build-time versioning). The desktop app may use `Avalonia`,
+`Avalonia.Desktop`, and `Avalonia.Themes.Fluent` 12.1.5, and `CSTNet`
+2.1.200; its tests use `xunit.v3`. New dependencies need the owner's approval.
 
 Two build plugins generate source into `.build/`, so never edit those files:
 
@@ -34,7 +45,7 @@ Two build plugins generate source into `.build/`, so never edit those files:
   the `GitVersion` namespace.
 
 Never commit build output (`.build/`, `DerivedData/`, `*.xcodeproj`,
-`xcuserdata/`) or database files (`*.db`, `*.sqlite3`, `*.db-shm`, `*.db-wal`).
+`xcuserdata/`, `app/**/bin/`, `app/**/obj/`) or database files (`*.db`, `*.sqlite3`, `*.db-shm`, `*.db-wal`).
 
 ## Build and Test
 
@@ -45,6 +56,16 @@ swift test           # all tests must pass
 
 The first build compiles both plugin toolchains and takes noticeably longer
 than later builds.
+
+For the desktop app (needs the .NET 10 SDK):
+
+```sh
+dotnet build app/Commis.slnx                 # warnings are errors
+dotnet test --solution app/Commis.slnx       # all tests must pass
+```
+
+Unit tests aren't enough for the window: run it, and check what changed on
+screen. With `swift build` done, it finds `.build/debug/commis` on its own.
 
 Follow the [Swift guidelines skill](.agents/skills/swift-guidelines/SKILL.md)
 for style and conventions. Where it disagrees with this file, this file wins.
@@ -68,6 +89,22 @@ for style and conventions. Where it disagrees with this file, this file wins.
   `commis/commis.sqlite3` does not exist yet.
 - Enums are stored as their raw strings so the database stays readable without
   the app. Keep the enum raw values in sync with the SQL `CHECK` constraints.
+
+## The desktop app
+
+- The window never reads or writes the database. Everything goes through
+  `commis`, and what it reads comes from the `--json` contract (`list --json`,
+  `info --json`). Fields in that contract are added, never renamed or removed,
+  without bumping its `version`.
+- Don't parse `commis`'s human-readable output. If the window needs something
+  the contract lacks, add it to the contract.
+- When a command fails, show commis's own sentence (`CommisClient.Explain`).
+- Every string the window shows lives in `uitext/english.dir/_100_commis.cst`,
+  with its key in `TextKeys.cs`; a test checks every key is in the table.
+- Colours are roles in `Theme/Palette.cs`, never hex values in views; a test
+  holds text to 3:1 contrast on both palettes.
+- Keep logic that can be tested out of the window's code-behind, in
+  `Records/` and the client.
 
 ## Versioning
 
@@ -114,7 +151,8 @@ file, not the latest tag, names the version being built.
 - [README.md](README.md): update the to-do list, requirements, and build steps
   when they change.
 - [Usage.md](Usage.md): keep the options table, storage paths, and examples in
-  sync with the actual CLI flags and CSV output.
+  sync with the actual CLI flags and CSV output, and "The desktop window" in
+  sync with what the window runs.
 - [changelog.md](changelog.md) (if present): user-visible changes only.
 
 State breaking changes, new dependencies, and flag renames in the commit

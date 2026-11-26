@@ -65,6 +65,32 @@ internal sealed class CommisClient(string executable, InterfaceText text)
     }
 
     /// <summary>
+    /// The records of <paramref name="type"/> with <paramref name="status"/>, or every status when it's null, as the
+    /// CSV <c>commis export</c> prints.
+    /// </summary>
+    /// <exception cref="CommisException">commis couldn't be run, or refused, in its own words.</exception>
+    internal async Task<string> ExportAsync(
+        string type,
+        string? status,
+        CancellationToken cancellationToken = default)
+    {
+        List<string> arguments = ["export", "--type", type];
+        if (status is not null)
+        {
+            arguments.Add("--status");
+            arguments.Add(status);
+        }
+
+        var result = await RunAsync(arguments, cancellationToken);
+        if (result.ExitCode != 0)
+        {
+            throw new CommisException(Explain(result, text));
+        }
+
+        return result.StandardOutput;
+    }
+
+    /// <summary>
     /// Adds a record with <c>commis add</c>, or, with <paramref name="dryRun"/>, asks commis whether it would, without
     /// keeping anything.
     /// </summary>

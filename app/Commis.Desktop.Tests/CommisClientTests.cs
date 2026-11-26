@@ -201,6 +201,37 @@ public sealed class CommisClientTests : IDisposable
     }
 
     [Fact]
+    public async Task ExportAsksForTheSectionsTypeAndFilter()
+    {
+        var log = Path.Combine(root.FullName, "arguments");
+        var client = new CommisClient(Script($"""
+            printf '%s\n' "$@" > '{log}'
+            printf 'Date,Type\n"2026-11-26","ych"\n'
+            """), Shipped.English);
+
+        var csv = await client.ExportAsync("ych", "paid", TestContext.Current.CancellationToken);
+
+        Assert.Equal("Date,Type\n\"2026-11-26\",\"ych\"\n", csv);
+        Assert.Equal(
+            "export\n--type\nych\n--status\npaid\n",
+            await File.ReadAllTextAsync(log, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task AFailedExportCarriesCommissSentence()
+    {
+        var client = new CommisClient(Script("""
+            echo "Error: The database is locked." >&2
+            exit 1
+            """), Shipped.English);
+
+        var problem = await Assert.ThrowsAsync<CommisException>(() =>
+            client.ExportAsync("commission", null, TestContext.Current.CancellationToken));
+
+        Assert.Equal("The database is locked.", problem.Message);
+    }
+
+    [Fact]
     public async Task AMissingExecutableSaysWhere()
     {
         var missing = Path.Combine(root.FullName, "nothing-here");

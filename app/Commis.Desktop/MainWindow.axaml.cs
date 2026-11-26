@@ -1,9 +1,11 @@
+using System.Text;
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Chrome;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
@@ -100,7 +102,6 @@ public sealed partial class MainWindow : Window
 
         AddButton.Content = text.Get(TextKeys.ToolbarAdd);
         ExportButton.Content = text.Get(TextKeys.ToolbarExport);
-        ToolTip.SetTip(ExportButton, text.Get(TextKeys.ToolbarExportLater));
         AutomationProperties.SetName(FilterBox, text.Get(TextKeys.ToolbarFilter));
 
         AutomationProperties.SetName(SectionList, text.Get(TextKeys.SidebarName));
@@ -231,7 +232,7 @@ public sealed partial class MainWindow : Window
             RafflesView.IsVisible = section == Section.Raffles;
             UnavailableText.IsVisible = !loaded && showsRecords;
 
-            FilterBox.IsEnabled = AddButton.IsEnabled = loaded && showsRecords;
+            FilterBox.IsEnabled = AddButton.IsEnabled = ExportButton.IsEnabled = loaded && showsRecords;
             var filter = filters.GetValueOrDefault(section);
             FilterBox.SelectedItem = filterOptions.First(option => option.Value == filter);
 
@@ -303,9 +304,15 @@ public sealed partial class MainWindow : Window
         DetailDate.Text = row.DateAndTime;
     }
 
-    private void ShowProblem(string message)
+    private void ShowProblem(string message) => ShowMessage(message, problem: true);
+
+    // Something done, such as an export, told in the same place as a problem but not in its colour.
+    private void ShowNotice(string message) => ShowMessage(message, problem: false);
+
+    private void ShowMessage(string message, bool problem)
     {
         ProblemText.Text = message;
+        ProblemText.Classes.Set("problem", problem);
         ProblemBar.IsVisible = true;
     }
 
@@ -420,6 +427,79 @@ public sealed partial class MainWindow : Window
         {
             e.Handled = true;
             await RefreshAsync();
+        }
+    }
+
+    // Exporting
+
+    /// <summary>
+    /// Writes the section's records under the current filter to a CSV file the person picks. The file is chosen
+    /// first, so cancelling runs nothing, and commis is asked only then, so the file holds what the database has at
+    /// that moment.
+    /// </summary>
+    private async void OnExportClicked(object? sender, RoutedEventArgs e)
+    {
+        if (client is null || section.RecordType() is not { } type)
+        {
+            return;
+        }
+
+        if (!StorageProvider.CanSave)
+        {
+            ShowProblem(text.Get(TextKeys.ExportNoPicker));
+            return;
+        }
+
+        var status = filters.GetValueOrDefault(section);
+        var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = text.Get(TextKeys.ExportTitle),
+            SuggestedFileName = Exports.FileName(section, status, text),
+            DefaultExtension = "csv",
+            ShowOverwritePrompt = true,
+            FileTypeChoices =
+            [
+                new FilePickerFileType(text.Get(TextKeys.ExportFileType))
+                {
+                    Patterns = ["*.csv"],
+                    MimeTypes = ["text/csv"],
+                },
+            ],
+        });
+        if (file is null)
+        {
+            return;
+        }
+
+        ExportButton.IsEnabled = false;
+        var where = file.TryGetLocalPath() ?? file.Name;
+        try
+        {
+            var csv = await client.ExportAsync(type, status);
+
+            await using var stream = await file.OpenWriteAsync();
+            if (stream.CanSeek)
+            {
+                // Replacing a longer file mustn't leave its tail behind.
+                stream.SetLength(0);
+            }
+
+            await using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+            await writer.WriteAsync(csv);
+            ShowNotice(text.Get(TextKeys.ExportSaved, where));
+        }
+        catch (CommisException exception)
+        {
+            ShowProblem(exception.Message);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            ShowProblem(text.Get(TextKeys.ExportFailed, where, exception.Message));
+        }
+        finally
+        {
+            file.Dispose();
+            ExportButton.IsEnabled = true;
         }
     }
 
@@ -630,10 +710,11 @@ public sealed partial class MainWindow : Window
         // Where the window manager draws the title bar, it already names the window.
         TitleText.IsVisible = merge;
 
-        // macOS keeps its own buttons at the top left, so the toolbar starts clear of them.
+        // macOS keeps its own buttons at the top left, so the toolbar starts clear of them. Only the toolbar moves,
+        // so the title stays in the middle.
         if (merge && OperatingSystem.IsMacOS())
         {
-            TitleBar.Padding = new Thickness(72, 0, 0, 0);
+            Toolbar.Margin = new Thickness(80, 0, 0, 0);
         }
 
         ShowWindowButtons();

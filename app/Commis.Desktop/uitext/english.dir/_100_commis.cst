@@ -12,7 +12,6 @@ window close ^Close^
 // The toolbar
 toolbar add ^Add^
 toolbar export ^Export^
-toolbar export later ^Exporting comes in a later version.^
 toolbar filter ^Status filter^
 filter all ^All statuses^
 
@@ -75,6 +74,15 @@ form needs fee ^Enter the fee.^
 form needs slot ^A YCH entry needs a slot number.^
 form fee not number ^The fee needs to be a number, such as 25 or 25.50.^
 form slot not number ^The slot needs to be a whole number, such as 4.^
+
+// Exporting
+export title ^Export to CSV^
+export file type ^CSV spreadsheet^
+export file commissions ^commissions^
+export file ych ^ych^
+export saved ^Saved to %s.^
+export failed ^Couldn't save %s: %s^
+export no picker ^This desktop can't show a save dialog, so the window can't export. Run commis export in a terminal instead.^
 
 // Raffles
 raffles title ^Coming soon^

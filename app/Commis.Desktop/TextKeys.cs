@@ -15,7 +15,6 @@ internal static class TextKeys
     // The toolbar
     public const string ToolbarAdd = "toolbar add";
     public const string ToolbarExport = "toolbar export";
-    public const string ToolbarExportLater = "toolbar export later";
     public const string ToolbarFilter = "toolbar filter";
     public const string FilterAll = "filter all";
 
@@ -78,6 +77,15 @@ internal static class TextKeys
     public const string FormNeedsSlot = "form needs slot";
     public const string FormFeeNotNumber = "form fee not number";
     public const string FormSlotNotNumber = "form slot not number";
+
+    // Exporting
+    public const string ExportTitle = "export title";
+    public const string ExportFileType = "export file type";
+    public const string ExportFileCommissions = "export file commissions";
+    public const string ExportFileYch = "export file ych";
+    public const string ExportSaved = "export saved";
+    public const string ExportFailed = "export failed";
+    public const string ExportNoPicker = "export no picker";
 
     // Raffles
     public const string RafflesTitle = "raffles title";

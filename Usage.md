@@ -272,3 +272,35 @@ commis raffle cancel 1
 
 Cancels an `open` or `drawn` raffle without deleting its entries. `fulfilled`
 raffles cannot be cancelled.
+
+## The desktop window
+
+The window in `app/` covers commissions and YCH. It runs `commis` for
+everything it shows or changes, the way a Git client runs `git`, so the two
+always agree. Changes made in a terminal show up in the window within a moment.
+
+| In the window | What it runs |
+| ------------- | ------------ |
+| Reading the records | `commis list --json` |
+| The database path in the footer | `commis info --json` |
+| Changing a record's status in the detail pane | `commis status <id> --set <status>` |
+| Checking the Add form as you fill it in | `commis add … --dry-run` |
+| Adding a record | `commis add …` |
+| Export | `commis export --type <section> [--status <filter>]`, written to a file you choose |
+
+YCH entries are grouped by their title, with slots in order. Entries without a
+slot, such as raffle winners, come last in their group, and entries without a
+title are grouped under "Untitled". In the YCH section, Add needs a slot,
+since a slot is what makes an entry a YCH.
+
+Raffles aren't in the window yet; use `commis raffle` in a terminal.
+
+Keys: <kbd>Ctrl</kbd>+<kbd>N</kbd> adds a record, <kbd>F5</kbd> or
+<kbd>Ctrl</kbd>+<kbd>R</kbd> reads the database again, and <kbd>Esc</kbd>
+closes the Add form. On macOS, use <kbd>Cmd</kbd> in place of <kbd>Ctrl</kbd>.
+
+The window finds `commis` through the `COMMIS` environment variable first,
+then beside its own executable, then a `.build` folder in the checkout it runs
+from, then your `PATH`. It remembers only which section you were last in, in
+`Commis/window.json` in the platform's settings folder (`~/.config` on Linux
+and macOS, `%APPDATA%` on Windows).
