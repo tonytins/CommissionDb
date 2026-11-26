@@ -110,6 +110,35 @@ public sealed class CommisClientTests : IDisposable
     }
 
     [Fact]
+    public async Task StatusIsSetWithTheCommandsFlags()
+    {
+        var log = Path.Combine(root.FullName, "arguments");
+        var client = new CommisClient(Script($"""
+            printf '%s\n' "$@" > '{log}'
+            echo 'Record #7: pending → paid.'
+            """));
+
+        await client.SetStatusAsync(7, "paid", TestContext.Current.CancellationToken);
+
+        Assert.Equal("status\n7\n--set\npaid\n", await File.ReadAllTextAsync(log, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task ARefusedStatusChangeCarriesCommissSentence()
+    {
+        // As commis does it: the sentence on standard output, then exit 1.
+        var client = new CommisClient(Script("""
+            echo 'No record with ID 99.'
+            exit 1
+            """));
+
+        var problem = await Assert.ThrowsAsync<CommisException>(() =>
+            client.SetStatusAsync(99, "paid", TestContext.Current.CancellationToken));
+
+        Assert.Equal("No record with ID 99.", problem.Message);
+    }
+
+    [Fact]
     public async Task AMissingExecutableSaysWhere()
     {
         var missing = Path.Combine(root.FullName, "nothing-here");

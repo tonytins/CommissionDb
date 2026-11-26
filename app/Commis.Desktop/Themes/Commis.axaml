@@ -14,18 +14,18 @@
     </ControlTheme>
   </Styles.Resources>
 
-  <Style Selector="TextBlock.title">
+  <Style Selector=":is(TextBlock).title">
     <Setter Property="FontSize" Value="17"/>
     <Setter Property="FontWeight" Value="SemiBold"/>
   </Style>
 
-  <Style Selector="TextBlock.secondary">
+  <Style Selector=":is(TextBlock).secondary">
     <Setter Property="FontSize" Value="13"/>
     <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
     <Setter Property="TextWrapping" Value="Wrap"/>
   </Style>
 
-  <Style Selector="TextBlock.problem">
+  <Style Selector=":is(TextBlock).problem">
     <Setter Property="Foreground" Value="{DynamicResource ErrorBrush}"/>
     <Setter Property="TextWrapping" Value="Wrap"/>
   </Style>
@@ -43,5 +43,39 @@
   <Style Selector="ListBox.sections">
     <Setter Property="Background" Value="Transparent"/>
     <Setter Property="Padding" Value="0"/>
+  </Style>
+
+  <!-- The record list's column names. -->
+  <Style Selector="TextBlock.header">
+    <Setter Property="FontSize" Value="12"/>
+    <Setter Property="FontWeight" Value="SemiBold"/>
+    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+  </Style>
+
+  <!-- A field's name in the detail pane. -->
+  <Style Selector="TextBlock.label">
+    <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+  </Style>
+
+  <!-- A selection uses the Selection role, in the sidebar and the list alike. -->
+  <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectionBrush}"/>
+    <Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
+  </Style>
+  <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectionBrush}"/>
+  </Style>
+  <Style Selector="ListBoxItem:selected:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource SelectionBrush}"/>
+  </Style>
+
+  <Style Selector="ListBox.records">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="Padding" Value="8,0"/>
+  </Style>
+
+  <Style Selector="ComboBox.toolbar">
+    <Setter Property="MinHeight" Value="26"/>
+    <Setter Property="Padding" Value="10,2"/>
   </Style>
 </Styles>

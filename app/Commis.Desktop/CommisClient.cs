@@ -47,6 +47,19 @@ internal sealed class CommisClient(string executable)
         return Read<RecordsEnvelope>(await RunAsync(arguments, cancellationToken)).Records;
     }
 
+    /// <summary>Sets a record's status with <c>commis status</c>.</summary>
+    /// <exception cref="CommisException">commis couldn't be run, or refused, in its own words.</exception>
+    internal async Task SetStatusAsync(int id, string status, CancellationToken cancellationToken = default)
+    {
+        var result = await RunAsync(
+            ["status", id.ToString(System.Globalization.CultureInfo.InvariantCulture), "--set", status],
+            cancellationToken);
+        if (result.ExitCode != 0)
+        {
+            throw new CommisException(Explain(result));
+        }
+    }
+
     /// <summary>
     /// The sentence to show for a run that produced no answer. What the command wrote on standard error comes first,
     /// then standard output when it isn't JSON, then the exit code.

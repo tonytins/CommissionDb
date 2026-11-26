@@ -1,8 +1,10 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:Commis.Desktop"
+        xmlns:records="using:Commis.Desktop.Records"
         x:Class="Commis.Desktop.MainWindow"
         Title="Commis"
-        Width="960" Height="620" MinWidth="720" MinHeight="440"
+        Width="1040" Height="640" MinWidth="760" MinHeight="440"
         Background="{DynamicResource PanelBrush}"
         FontSize="14">
   <Window.Resources>
@@ -33,23 +35,35 @@
         <TextBlock x:Name="TitleText" Text="Commis" FontWeight="SemiBold"
                    VerticalAlignment="Center" Margin="12,0,10,0" IsHitTestVisible="False"/>
 
-        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
-          <Button x:Name="AddButton" Classes="toolbar" Content="Add" IsEnabled="False"/>
-          <Button x:Name="StatusButton" Classes="toolbar" Content="Status" IsEnabled="False"/>
-          <Button x:Name="ExportButton" Classes="toolbar" Content="Export" IsEnabled="False"/>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
+          <Button x:Name="AddButton" Classes="toolbar" Content="Add" IsEnabled="False"
+                  ToolTip.Tip="Adding comes in a later version."/>
+          <ComboBox x:Name="FilterBox" Classes="toolbar" MinWidth="130"
+                    AutomationProperties.Name="Status filter"
+                    SelectionChanged="OnFilterChanged">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="local:FilterOption">
+                <TextBlock Text="{Binding Label}"/>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button x:Name="ExportButton" Classes="toolbar" Content="Export" IsEnabled="False"
+                  ToolTip.Tip="Exporting comes in a later version."/>
         </StackPanel>
 
         <!-- Windows-style buttons, drawn where Commis draws the frame itself. -->
         <StackPanel x:Name="WindowButtons" Grid.Column="2" Orientation="Horizontal" IsVisible="False">
-          <Button x:Name="MinimizeButton" Theme="{StaticResource CaptionButton}" Click="OnMinimizeClicked">
+          <Button x:Name="MinimizeButton" Theme="{StaticResource CaptionButton}" Click="OnMinimizeClicked"
+                  AutomationProperties.Name="Minimize">
             <Path Data="M0,5 L10,5" Stroke="{DynamicResource TextBrush}" StrokeThickness="1" Width="10" Height="10"/>
           </Button>
-          <Button x:Name="MaximizeButton" Theme="{StaticResource CaptionButton}" Click="OnMaximizeClicked">
+          <Button x:Name="MaximizeButton" Theme="{StaticResource CaptionButton}" Click="OnMaximizeClicked"
+                  AutomationProperties.Name="Maximize">
             <Path Data="M0.5,0.5 L9.5,0.5 L9.5,9.5 L0.5,9.5 Z" Stroke="{DynamicResource TextBrush}"
                   StrokeThickness="1" Width="10" Height="10"/>
           </Button>
           <Button x:Name="CloseButton" Classes="caption close" Theme="{StaticResource CaptionButton}"
-                  Click="OnCloseClicked">
+                  Click="OnCloseClicked" AutomationProperties.Name="Close">
             <Path Data="M0,0 L10,10 M10,0 L0,10" Stroke="{DynamicResource TextBrush}" StrokeThickness="1"
                   Width="10" Height="10"/>
           </Button>
@@ -60,15 +74,113 @@
     <!-- The places: commissions, YCH, and raffles. -->
     <Border DockPanel.Dock="Left" Width="200" Background="{DynamicResource SidebarBrush}"
             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,1,0" Padding="8">
-      <ListBox x:Name="SectionList" Classes="sections"/>
+      <ListBox x:Name="SectionList" Classes="sections" SelectionChanged="OnSectionChanged"
+               AutomationProperties.Name="Sections">
+        <ListBox.ItemTemplate>
+          <DataTemplate x:DataType="local:SectionItem">
+            <Grid ColumnDefinitions="*,Auto">
+              <TextBlock Text="{Binding Name}"/>
+              <TextBlock Grid.Column="1" Classes="secondary" Text="{Binding Count}" VerticalAlignment="Center"/>
+            </Grid>
+          </DataTemplate>
+        </ListBox.ItemTemplate>
+      </ListBox>
     </Border>
 
-    <Panel Margin="20,16">
-      <StackPanel Spacing="6">
-        <TextBlock x:Name="SummaryText" Classes="title"/>
-        <TextBlock x:Name="DetailText" Classes="secondary"/>
-        <TextBlock x:Name="ProblemText" Classes="problem" IsVisible="False"/>
+    <!-- Where the database is, for when it isn't the one you expected. -->
+    <Border DockPanel.Dock="Bottom" Padding="12,6" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0">
+      <TextBlock x:Name="DatabaseText" Classes="secondary" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/>
+    </Border>
+
+    <!-- Something that went wrong, in commis's own words, above whatever was showing. -->
+    <Border x:Name="ProblemBar" DockPanel.Dock="Top" IsVisible="False" Padding="16,8"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
+      <Grid ColumnDefinitions="*,Auto">
+        <ScrollViewer MaxHeight="96" VerticalAlignment="Center">
+          <SelectableTextBlock x:Name="ProblemText" Classes="problem"/>
+        </ScrollViewer>
+        <Button Grid.Column="1" Classes="toolbar" Content="Dismiss" Margin="12,0,0,0" Click="OnDismissProblem"/>
+      </Grid>
+    </Border>
+
+    <Panel>
+      <!-- Commissions and YCH: the list, and the selected record beside it. -->
+      <Grid x:Name="RecordsView" ColumnDefinitions="*,320">
+        <DockPanel>
+          <Grid DockPanel.Dock="Top" ColumnDefinitions="*,*,80,96,100" Margin="20,12,12,6">
+            <TextBlock Classes="header" Text="Client"/>
+            <TextBlock Grid.Column="1" Classes="header" Text="Title"/>
+            <TextBlock Grid.Column="2" Classes="header" Text="Fee" HorizontalAlignment="Right"/>
+            <TextBlock Grid.Column="3" Classes="header" Text="Status" Margin="16,0,0,0"/>
+            <TextBlock Grid.Column="4" Classes="header" Text="Date"/>
+          </Grid>
+          <Panel>
+            <ListBox x:Name="RecordList" Classes="records" SelectionChanged="OnRecordChanged"
+                     AutomationProperties.Name="Records">
+              <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="records:RecordRow">
+                  <Grid ColumnDefinitions="*,*,80,96,100">
+                    <TextBlock Text="{Binding Client}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Title}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Fee}" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="3" Text="{Binding Status}" Margin="16,0,0,0"/>
+                    <TextBlock Grid.Column="4" Text="{Binding Date}"/>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.ItemTemplate>
+            </ListBox>
+            <TextBlock x:Name="EmptyText" Classes="secondary" IsVisible="False"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Panel>
+        </DockPanel>
+
+        <Border Grid.Column="1" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1,0,0,0" Padding="20,16">
+          <Panel>
+            <TextBlock x:Name="NoSelectionText" Classes="secondary" TextWrapping="Wrap"/>
+            <ScrollViewer x:Name="DetailView" IsVisible="False">
+              <StackPanel Spacing="10">
+                <SelectableTextBlock x:Name="DetailClient" Classes="title" TextWrapping="Wrap"/>
+                <Grid ColumnDefinitions="96,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                      RowSpacing="8">
+                  <TextBlock Classes="label" Text="Status" VerticalAlignment="Center"/>
+                  <ComboBox x:Name="StatusBox" Grid.Column="1" HorizontalAlignment="Stretch"
+                            AutomationProperties.Name="Status" SelectionChanged="OnStatusChosen">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="local:FilterOption">
+                        <TextBlock Text="{Binding Label}"/>
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                  <TextBlock Grid.Row="1" Classes="label" Text="Fee"/>
+                  <SelectableTextBlock x:Name="DetailFee" Grid.Row="1" Grid.Column="1"/>
+                  <TextBlock Grid.Row="2" Classes="label" Text="Title"/>
+                  <SelectableTextBlock x:Name="DetailTitle" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap"/>
+                  <TextBlock x:Name="DetailSlotLabel" Grid.Row="3" Classes="label" Text="Slot"/>
+                  <SelectableTextBlock x:Name="DetailSlot" Grid.Row="3" Grid.Column="1"/>
+                  <TextBlock Grid.Row="4" Classes="label" Text="Reference"/>
+                  <SelectableTextBlock x:Name="DetailReference" Grid.Row="4" Grid.Column="1" TextWrapping="Wrap"/>
+                  <TextBlock Grid.Row="5" Classes="label" Text="Description"/>
+                  <SelectableTextBlock x:Name="DetailDescription" Grid.Row="5" Grid.Column="1" TextWrapping="Wrap"/>
+                  <TextBlock Grid.Row="6" Classes="label" Text="Added"/>
+                  <SelectableTextBlock x:Name="DetailDate" Grid.Row="6" Grid.Column="1"/>
+                </Grid>
+              </StackPanel>
+            </ScrollViewer>
+          </Panel>
+        </Border>
+      </Grid>
+
+      <!-- Raffles: present, but honest that the window can't do them yet. -->
+      <StackPanel x:Name="RafflesView" IsVisible="False" Spacing="6" Margin="20,16" MaxWidth="520"
+                  HorizontalAlignment="Left">
+        <TextBlock Classes="title" Text="Raffles aren't in the window yet"/>
+        <TextBlock Classes="secondary"
+                   Text="Raffles have the most steps of anything in Commis, so the window starts with commissions and YCH. Until raffles arrive here, run commis raffle in a terminal."/>
       </StackPanel>
+
+      <!-- Nothing to show at all, such as when commis can't be found. -->
+      <TextBlock x:Name="UnavailableText" Classes="secondary" IsVisible="False" Margin="20,16"
+                 Text="Nothing to show until commis answers."/>
     </Panel>
   </DockPanel>
 </Window>
