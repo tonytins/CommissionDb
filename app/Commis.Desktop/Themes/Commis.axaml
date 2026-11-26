@@ -52,6 +52,11 @@
     <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
   </Style>
 
+  <!-- The detail pane's rows are spaced by margins, so a hidden row, such as a commission's slot, leaves no gap. -->
+  <Style Selector="Grid.fields > :is(Control)">
+    <Setter Property="Margin" Value="0,0,0,8"/>
+  </Style>
+
   <!-- A field's name in the detail pane. -->
   <Style Selector="TextBlock.label">
     <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>

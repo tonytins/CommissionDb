@@ -14,7 +14,6 @@ internal static class TextKeys
 
     // The toolbar
     public const string ToolbarAdd = "toolbar add";
-    public const string ToolbarAddLater = "toolbar add later";
     public const string ToolbarExport = "toolbar export";
     public const string ToolbarExportLater = "toolbar export later";
     public const string ToolbarFilter = "toolbar filter";
@@ -39,10 +38,16 @@ internal static class TextKeys
     public const string ColumnFee = "column fee";
     public const string ColumnStatus = "column status";
     public const string ColumnDate = "column date";
+    public const string ColumnSlot = "column slot";
     public const string EmptyCommissions = "empty commissions";
     public const string EmptyCommissionsFiltered = "empty commissions filtered";
     public const string EmptyYch = "empty ych";
     public const string EmptyYchFiltered = "empty ych filtered";
+
+    // YCH runs
+    public const string YchUntitled = "ych untitled";
+    public const string YchOneEntry = "ych one entry";
+    public const string YchEntries = "ych entries";
 
     // The detail pane
     public const string DetailStatus = "detail status";
@@ -54,6 +59,25 @@ internal static class TextKeys
     public const string DetailAdded = "detail added";
     public const string DetailNoneCommission = "detail none commission";
     public const string DetailNoneYch = "detail none ych";
+
+    // The add form
+    public const string FormNewCommission = "form new commission";
+    public const string FormNewYch = "form new ych";
+    public const string FormClient = "form client";
+    public const string FormReference = "form reference";
+    public const string FormFee = "form fee";
+    public const string FormSlot = "form slot";
+    public const string FormTitle = "form title";
+    public const string FormDescription = "form description";
+    public const string FormOptional = "form optional";
+    public const string FormAdd = "form add";
+    public const string FormCancel = "form cancel";
+    public const string FormNeedsClient = "form needs client";
+    public const string FormNeedsReference = "form needs reference";
+    public const string FormNeedsFee = "form needs fee";
+    public const string FormNeedsSlot = "form needs slot";
+    public const string FormFeeNotNumber = "form fee not number";
+    public const string FormSlotNotNumber = "form slot not number";
 
     // Raffles
     public const string RafflesTitle = "raffles title";

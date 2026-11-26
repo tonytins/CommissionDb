@@ -19,6 +19,9 @@ internal sealed class RecordRow(Record record, InterfaceText text)
 
     public string Slot => Record.Slot?.ToString(CultureInfo.CurrentCulture) ?? None;
 
+    /// <summary>The slot as the YCH list leads with it, such as <c>#4</c>.</summary>
+    public string SlotLabel => Record.Slot is { } slot ? "#" + slot.ToString(CultureInfo.CurrentCulture) : None;
+
     public string Reference => string.IsNullOrEmpty(Record.Reference) ? None : Record.Reference;
 
     public string Description => string.IsNullOrEmpty(Record.Description) ? None : Record.Description;

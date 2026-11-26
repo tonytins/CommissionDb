@@ -35,6 +35,31 @@ internal static class Browser
             .ToList();
     }
 
+    /// <summary>
+    /// The YCH entries with <paramref name="status"/>, or all of them when it's null, gathered into runs by title.
+    /// Runs sort by their newest entry; within a run, entries sort by slot, and entries with no slot come last. Entries
+    /// with no title stand together under "Untitled". A run with nothing under the filter isn't shown.
+    /// </summary>
+    internal static IReadOnlyList<YchGroup> Groups(IEnumerable<Record> records, string? status, InterfaceText text) =>
+        records
+            .Where(record => record.Type == "ych" && (status is null || record.Status == status))
+            .GroupBy(record => string.IsNullOrEmpty(record.Title) ? null : record.Title)
+            .OrderByDescending(run => run.Max(record => record.Date), StringComparer.Ordinal)
+            .ThenByDescending(run => run.Max(record => record.Id))
+            .Select(run =>
+            {
+                var rows = run
+                    .OrderBy(record => record.Slot is null)
+                    .ThenBy(record => record.Slot)
+                    .ThenBy(record => record.Id)
+                    .Select(record => new RecordRow(record, text))
+                    .ToList();
+                var title = run.Key ?? text.Get(TextKeys.YchUntitled);
+                var count = rows.Count == 1 ? text.Get(TextKeys.YchOneEntry) : text.Get(TextKeys.YchEntries, rows.Count);
+                return new YchGroup(new YchHeader(title, count), rows);
+            })
+            .ToList();
+
     /// <summary>What an empty list says, naming the filter it's under.</summary>
     internal static string Empty(Section section, string? status, InterfaceText text)
     {

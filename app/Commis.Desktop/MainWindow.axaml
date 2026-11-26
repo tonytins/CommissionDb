@@ -35,7 +35,7 @@
                    VerticalAlignment="Center" Margin="12,0,10,0" IsHitTestVisible="False"/>
 
         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="6">
-          <Button x:Name="AddButton" Classes="toolbar" IsEnabled="False"/>
+          <Button x:Name="AddButton" Classes="toolbar" IsEnabled="False" Click="OnAddClicked"/>
           <ComboBox x:Name="FilterBox" Classes="toolbar" MinWidth="130"
                     SelectionChanged="OnFilterChanged">
             <ComboBox.ItemTemplate>
@@ -100,15 +100,24 @@
       <!-- Commissions and YCH: the list, and the selected record beside it. -->
       <Grid x:Name="RecordsView" ColumnDefinitions="*,320">
         <DockPanel>
-          <Grid DockPanel.Dock="Top" ColumnDefinitions="*,*,80,96,100" Margin="20,12,12,6">
-            <TextBlock x:Name="ClientHeader" Classes="header"/>
-            <TextBlock x:Name="TitleHeader" Grid.Column="1" Classes="header"/>
-            <TextBlock x:Name="FeeHeader" Grid.Column="2" Classes="header" HorizontalAlignment="Right"/>
-            <TextBlock x:Name="StatusHeader" Grid.Column="3" Classes="header" Margin="16,0,0,0"/>
-            <TextBlock x:Name="DateHeader" Grid.Column="4" Classes="header"/>
-          </Grid>
+          <Panel DockPanel.Dock="Top" Margin="20,12,12,6">
+            <Grid x:Name="CommissionColumns" ColumnDefinitions="*,*,80,96,100">
+              <TextBlock x:Name="ClientHeader" Classes="header"/>
+              <TextBlock x:Name="TitleHeader" Grid.Column="1" Classes="header"/>
+              <TextBlock x:Name="FeeHeader" Grid.Column="2" Classes="header" HorizontalAlignment="Right"/>
+              <TextBlock x:Name="StatusHeader" Grid.Column="3" Classes="header" Margin="16,0,0,0"/>
+              <TextBlock x:Name="DateHeader" Grid.Column="4" Classes="header"/>
+            </Grid>
+            <Grid x:Name="YchColumns" ColumnDefinitions="56,*,80,96,100" IsVisible="False">
+              <TextBlock x:Name="YchSlotHeader" Classes="header"/>
+              <TextBlock x:Name="YchClientHeader" Grid.Column="1" Classes="header"/>
+              <TextBlock x:Name="YchFeeHeader" Grid.Column="2" Classes="header" HorizontalAlignment="Right"/>
+              <TextBlock x:Name="YchStatusHeader" Grid.Column="3" Classes="header" Margin="16,0,0,0"/>
+              <TextBlock x:Name="YchDateHeader" Grid.Column="4" Classes="header"/>
+            </Grid>
+          </Panel>
           <Panel>
-            <ListBox x:Name="RecordList" Classes="records" SelectionChanged="OnRecordChanged">
+            <ListBox x:Name="CommissionList" Classes="records" SelectionChanged="OnRecordChanged">
               <ListBox.ItemTemplate>
                 <DataTemplate x:DataType="records:RecordRow">
                   <Grid ColumnDefinitions="*,*,80,96,100">
@@ -121,6 +130,29 @@
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
+
+            <!-- YCH: each run's heading, then its slots. Headings can't be selected. -->
+            <ListBox x:Name="YchList" Classes="records" SelectionChanged="OnRecordChanged" IsVisible="False">
+              <ListBox.DataTemplates>
+                <DataTemplate DataType="{x:Type records:YchHeader}" x:DataType="records:YchHeader">
+                  <Grid ColumnDefinitions="*,Auto" Margin="0,6,0,0">
+                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" Foreground="{DynamicResource TextBrush}"
+                               TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Count}" FontSize="13" VerticalAlignment="Center"
+                               Foreground="{DynamicResource SecondaryTextBrush}"/>
+                  </Grid>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type records:RecordRow}" x:DataType="records:RecordRow">
+                  <Grid ColumnDefinitions="56,*,80,96,100">
+                    <TextBlock Text="{Binding SlotLabel}"/>
+                    <TextBlock Grid.Column="1" Text="{Binding Client}" TextTrimming="CharacterEllipsis"/>
+                    <TextBlock Grid.Column="2" Text="{Binding Fee}" HorizontalAlignment="Right"/>
+                    <TextBlock Grid.Column="3" Text="{Binding Status}" Margin="16,0,0,0"/>
+                    <TextBlock Grid.Column="4" Text="{Binding Date}"/>
+                  </Grid>
+                </DataTemplate>
+              </ListBox.DataTemplates>
+            </ListBox>
             <TextBlock x:Name="EmptyText" Classes="secondary" IsVisible="False"
                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
           </Panel>
@@ -132,8 +164,7 @@
             <ScrollViewer x:Name="DetailView" IsVisible="False">
               <StackPanel Spacing="10">
                 <SelectableTextBlock x:Name="DetailClient" Classes="title" TextWrapping="Wrap"/>
-                <Grid ColumnDefinitions="96,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
-                      RowSpacing="8">
+                <Grid Classes="fields" ColumnDefinitions="96,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto">
                   <TextBlock x:Name="StatusLabel" Classes="label" VerticalAlignment="Center"/>
                   <ComboBox x:Name="StatusBox" Grid.Column="1" HorizontalAlignment="Stretch"
                             SelectionChanged="OnStatusChosen">
@@ -156,6 +187,33 @@
                   <TextBlock x:Name="AddedLabel" Grid.Row="6" Classes="label"/>
                   <SelectableTextBlock x:Name="DetailDate" Grid.Row="6" Grid.Column="1"/>
                 </Grid>
+              </StackPanel>
+            </ScrollViewer>
+
+            <!-- Adding a record: shaped by the section, checked by a dry run as it's filled in. -->
+            <ScrollViewer x:Name="AddForm" IsVisible="False" KeyDown="OnFormKeyDown">
+              <StackPanel Spacing="6">
+                <TextBlock x:Name="FormHeading" Classes="title" Margin="0,0,0,6"/>
+                <TextBlock x:Name="FormClientLabel" Classes="label"/>
+                <TextBox x:Name="FormClient" TextChanged="OnFormChanged"/>
+                <TextBlock x:Name="FormReferenceLabel" Classes="label"/>
+                <TextBox x:Name="FormReference" TextChanged="OnFormChanged"/>
+                <TextBlock x:Name="FormFeeLabel" Classes="label"/>
+                <TextBox x:Name="FormFee" TextChanged="OnFormChanged"/>
+                <StackPanel x:Name="FormYchFields" Spacing="6">
+                  <TextBlock x:Name="FormSlotLabel" Classes="label"/>
+                  <TextBox x:Name="FormSlot" TextChanged="OnFormChanged"/>
+                  <TextBlock x:Name="FormTitleLabel" Classes="label"/>
+                  <TextBox x:Name="FormTitle" TextChanged="OnFormChanged"/>
+                </StackPanel>
+                <TextBlock x:Name="FormDescriptionLabel" Classes="label"/>
+                <TextBox x:Name="FormDescription" TextChanged="OnFormChanged" AcceptsReturn="True"
+                         TextWrapping="Wrap" MinHeight="64"/>
+                <SelectableTextBlock x:Name="FormProblem" Classes="problem" IsVisible="False" Margin="0,4,0,0"/>
+                <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right" Margin="0,8,0,0">
+                  <Button x:Name="FormCancelButton" Click="OnFormCancel"/>
+                  <Button x:Name="FormAddButton" Classes="accent" Click="OnFormAdd"/>
+                </StackPanel>
               </StackPanel>
             </ScrollViewer>
           </Panel>

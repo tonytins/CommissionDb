@@ -11,7 +11,6 @@ window close ^Close^
 
 // The toolbar
 toolbar add ^Add^
-toolbar add later ^Adding comes in a later version.^
 toolbar export ^Export^
 toolbar export later ^Exporting comes in a later version.^
 toolbar filter ^Status filter^
@@ -36,10 +35,16 @@ column title ^Title^
 column fee ^Fee^
 column status ^Status^
 column date ^Date^
+column slot ^Slot^
 empty commissions ^No commissions yet.^
 empty commissions filtered ^No %s commissions.^
 empty ych ^No YCH entries yet.^
 empty ych filtered ^No %s YCH entries.^
+
+// YCH runs
+ych untitled ^Untitled^
+ych one entry ^1 entry^
+ych entries ^%d entries^
 
 // The detail pane
 detail status ^Status^
@@ -52,9 +57,28 @@ detail added ^Added^
 detail none commission ^Select a commission to see it here.^
 detail none ych ^Select a YCH entry to see it here.^
 
+// The add form
+form new commission ^New commission^
+form new ych ^New YCH entry^
+form client ^Client^
+form reference ^Reference^
+form fee ^Fee^
+form slot ^Slot^
+form title ^Title^
+form description ^Description^
+form optional ^Optional^
+form add ^Add^
+form cancel ^Cancel^
+form needs client ^Enter the client's name.^
+form needs reference ^Enter a reference, such as a link to the post.^
+form needs fee ^Enter the fee.^
+form needs slot ^A YCH entry needs a slot number.^
+form fee not number ^The fee needs to be a number, such as 25 or 25.50.^
+form slot not number ^The slot needs to be a whole number, such as 4.^
+
 // Raffles
-raffles title ^Raffles aren't in the window yet^
-raffles body ^Raffles have the most steps of anything in Commis, so the window starts with commissions and YCH. Until raffles arrive here, run commis raffle in a terminal.^
+raffles title ^Coming soon^
+raffles body ^Raffles is coming soon. Stay tuned!^
 
 // The database and its problems
 database line ^%s · schema %d · commis %s^

@@ -38,6 +38,11 @@ public sealed partial class MainWindow : Window
     private bool rendering;
     private bool merged;
 
+    // The add form: open or not, its pending check, and which check is the latest.
+    private readonly DispatcherTimer formCheck = new() { Interval = TimeSpan.FromMilliseconds(350) };
+    private bool formOpen;
+    private int formChecks;
+
     /// <summary>Opens the window on the commis found for this computer.</summary>
     public MainWindow()
         : this(CommisLocation.Find(), new WindowSettings(WindowSettings.DefaultPath), InterfaceText.Load())
@@ -68,6 +73,19 @@ public sealed partial class MainWindow : Window
         MergeTitleBar(TitleBars.Merges());
         Render();
 
+        YchList.ContainerPrepared += (_, e) =>
+        {
+            // A run's heading is a label, not a record: it can't be selected or reached with the arrow keys.
+            var heading = e.Container.DataContext is YchHeader;
+            e.Container.IsEnabled = !heading;
+            e.Container.Focusable = !heading;
+        };
+        formCheck.Tick += async (_, _) =>
+        {
+            formCheck.Stop();
+            await CheckFormAsync();
+        };
+
         Opened += async (_, _) => await StartAsync();
         Closed += (_, _) => watcher?.Dispose();
     }
@@ -81,18 +99,19 @@ public sealed partial class MainWindow : Window
         NameButton(CloseButton, TextKeys.WindowClose);
 
         AddButton.Content = text.Get(TextKeys.ToolbarAdd);
-        ToolTip.SetTip(AddButton, text.Get(TextKeys.ToolbarAddLater));
         ExportButton.Content = text.Get(TextKeys.ToolbarExport);
         ToolTip.SetTip(ExportButton, text.Get(TextKeys.ToolbarExportLater));
         AutomationProperties.SetName(FilterBox, text.Get(TextKeys.ToolbarFilter));
 
         AutomationProperties.SetName(SectionList, text.Get(TextKeys.SidebarName));
-        AutomationProperties.SetName(RecordList, text.Get(TextKeys.ListName));
-        ClientHeader.Text = text.Get(TextKeys.ColumnClient);
+        AutomationProperties.SetName(CommissionList, text.Get(TextKeys.ListName));
+        AutomationProperties.SetName(YchList, text.Get(TextKeys.ListName));
+        ClientHeader.Text = YchClientHeader.Text = text.Get(TextKeys.ColumnClient);
         TitleHeader.Text = text.Get(TextKeys.ColumnTitle);
-        FeeHeader.Text = text.Get(TextKeys.ColumnFee);
-        StatusHeader.Text = text.Get(TextKeys.ColumnStatus);
-        DateHeader.Text = text.Get(TextKeys.ColumnDate);
+        YchSlotHeader.Text = text.Get(TextKeys.ColumnSlot);
+        FeeHeader.Text = YchFeeHeader.Text = text.Get(TextKeys.ColumnFee);
+        StatusHeader.Text = YchStatusHeader.Text = text.Get(TextKeys.ColumnStatus);
+        DateHeader.Text = YchDateHeader.Text = text.Get(TextKeys.ColumnDate);
 
         StatusLabel.Text = text.Get(TextKeys.DetailStatus);
         AutomationProperties.SetName(StatusBox, StatusLabel.Text);
@@ -107,6 +126,23 @@ public sealed partial class MainWindow : Window
         RafflesBody.Text = text.Get(TextKeys.RafflesBody);
         UnavailableText.Text = text.Get(TextKeys.Unavailable);
         DismissButton.Content = text.Get(TextKeys.ProblemDismiss);
+
+        Label(FormClientLabel, FormClient, TextKeys.FormClient);
+        Label(FormReferenceLabel, FormReference, TextKeys.FormReference);
+        Label(FormFeeLabel, FormFee, TextKeys.FormFee);
+        Label(FormSlotLabel, FormSlot, TextKeys.FormSlot);
+        Label(FormTitleLabel, FormTitle, TextKeys.FormTitle);
+        Label(FormDescriptionLabel, FormDescription, TextKeys.FormDescription);
+        FormTitle.PlaceholderText = FormDescription.PlaceholderText = text.Get(TextKeys.FormOptional);
+        FormCancelButton.Content = text.Get(TextKeys.FormCancel);
+        FormAddButton.Content = text.Get(TextKeys.FormAdd);
+    }
+
+    // A field's label, shown above it and given to screen readers.
+    private void Label(TextBlock label, TextBox field, string key)
+    {
+        label.Text = text.Get(key);
+        AutomationProperties.SetName(field, label.Text);
     }
 
     // A button that shows only a glyph is named for screen readers and tooltips alike.
@@ -170,9 +206,13 @@ public sealed partial class MainWindow : Window
             loaded = true;
             Render();
         }
-        catch (CommisException exception) when (refresh == refreshes)
+        catch (CommisException exception)
         {
-            ShowProblem(exception.Message);
+            // A refresh that a newer one replaced has nothing to say.
+            if (refresh == refreshes)
+            {
+                ShowProblem(exception.Message);
+            }
         }
     }
 
@@ -191,18 +231,39 @@ public sealed partial class MainWindow : Window
             RafflesView.IsVisible = section == Section.Raffles;
             UnavailableText.IsVisible = !loaded && showsRecords;
 
-            FilterBox.IsEnabled = loaded && showsRecords;
+            FilterBox.IsEnabled = AddButton.IsEnabled = loaded && showsRecords;
             var filter = filters.GetValueOrDefault(section);
             FilterBox.SelectedItem = filterOptions.First(option => option.Value == filter);
 
-            var rows = Browser.Rows(records, section, filter, text);
-            RecordList.ItemsSource = rows;
-            RecordList.SelectedItem = rows.FirstOrDefault(row => row.Id == selectedId);
+            // Commissions are rows; YCH entries stand in runs, each under its heading.
+            var ych = section == Section.Ych;
+            IReadOnlyList<RecordRow> rows;
+            IReadOnlyList<object> items;
+            if (ych)
+            {
+                var groups = Browser.Groups(records, filter, text);
+                rows = groups.SelectMany(group => group.Rows).ToList();
+                items = groups.SelectMany(group => group.Rows.Prepend<object>(group.Header)).ToList();
+            }
+            else
+            {
+                rows = Browser.Rows(records, section, filter, text);
+                items = rows;
+            }
+
+            CommissionColumns.IsVisible = !ych;
+            YchColumns.IsVisible = ych;
+            var shown = ych ? YchList : CommissionList;
+            var hidden = ych ? CommissionList : YchList;
+            hidden.ItemsSource = null;
+            hidden.IsVisible = false;
+            shown.ItemsSource = items;
+            shown.SelectedItem = rows.FirstOrDefault(row => row.Id == selectedId);
+            shown.IsVisible = rows.Count > 0;
             EmptyText.Text = Browser.Empty(section, filter, text);
             EmptyText.IsVisible = rows.Count == 0;
-            RecordList.IsVisible = rows.Count > 0;
 
-            ShowDetail(RecordList.SelectedItem as RecordRow);
+            ShowDetail(SelectedRow);
         }
         finally
         {
@@ -210,8 +271,19 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private ListBox CurrentList => section == Section.Ych ? YchList : CommissionList;
+
+    private RecordRow? SelectedRow => CurrentList.SelectedItem as RecordRow;
+
     private void ShowDetail(RecordRow? row)
     {
+        // The add form has the column while it's open.
+        if (formOpen)
+        {
+            DetailView.IsVisible = NoSelectionText.IsVisible = false;
+            return;
+        }
+
         DetailView.IsVisible = row is not null;
         NoSelectionText.IsVisible = row is null;
         NoSelectionText.Text = text.Get(section == Section.Ych ? TextKeys.DetailNoneYch : TextKeys.DetailNoneCommission);
@@ -248,6 +320,7 @@ public sealed partial class MainWindow : Window
             return;
         }
 
+        CloseForm();
         section = item.Section;
         selectedId = null;
         settings.SaveSection(section);
@@ -267,12 +340,12 @@ public sealed partial class MainWindow : Window
 
     private void OnRecordChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (rendering)
+        if (rendering || sender != CurrentList)
         {
             return;
         }
 
-        var row = RecordList.SelectedItem as RecordRow;
+        var row = SelectedRow;
         selectedId = row?.Id;
         rendering = true;
         try
@@ -288,7 +361,7 @@ public sealed partial class MainWindow : Window
     private async void OnStatusChosen(object? sender, SelectionChangedEventArgs e)
     {
         if (rendering || client is null
-            || RecordList.SelectedItem is not RecordRow row
+            || SelectedRow is not { } row
             || StatusBox.SelectedItem is not FilterOption { Value: { } status }
             || status == row.Record.Status)
         {
@@ -333,14 +406,198 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        // F5, or Ctrl+R (Cmd+R on macOS), reads the database again.
+        // Ctrl+N (Cmd+N on macOS) adds a record where the section holds them.
         var command = OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control;
+        if (e.Key == Key.N && e.KeyModifiers == command && AddButton.IsEnabled)
+        {
+            e.Handled = true;
+            OpenForm();
+            return;
+        }
+
+        // F5, or Ctrl+R (Cmd+R on macOS), reads the database again.
         if (e.Key == Key.F5 || (e.Key == Key.R && e.KeyModifiers == command))
         {
             e.Handled = true;
             await RefreshAsync();
         }
     }
+
+    // The add form
+
+    private void OnAddClicked(object? sender, RoutedEventArgs e) => OpenForm();
+
+    /// <summary>
+    /// Opens the add form in the detail column, shaped by the section: a YCH entry asks for a slot and an optional
+    /// title, which starts as the selected entry's run so the next slot in a run is quick to add.
+    /// </summary>
+    private void OpenForm()
+    {
+        if (section.RecordType() is null)
+        {
+            return;
+        }
+
+        var ych = section == Section.Ych;
+        var run = ych ? SelectedRow?.Record.Title : null;
+        formOpen = true;
+        FormHeading.Text = text.Get(ych ? TextKeys.FormNewYch : TextKeys.FormNewCommission);
+        FormYchFields.IsVisible = ych;
+        foreach (var field in new[] { FormClient, FormReference, FormFee, FormSlot, FormDescription })
+        {
+            field.Text = string.Empty;
+        }
+
+        FormTitle.Text = run ?? string.Empty;
+        FormProblem.IsVisible = false;
+        FormAddButton.IsEnabled = true;
+        AddForm.IsVisible = true;
+        ShowDetail(null);
+        Dispatcher.UIThread.Post(() => FormClient.Focus());
+    }
+
+    private void CloseForm()
+    {
+        if (!formOpen)
+        {
+            return;
+        }
+
+        formOpen = false;
+        formCheck.Stop();
+        formChecks++;
+        AddForm.IsVisible = false;
+        ShowDetail(SelectedRow);
+    }
+
+    private void OnFormCancel(object? sender, RoutedEventArgs e) => CloseForm();
+
+    private void OnFormChanged(object? sender, TextChangedEventArgs e)
+    {
+        if (!formOpen)
+        {
+            return;
+        }
+
+        // Checked once typing pauses, not on every key.
+        formCheck.Stop();
+        formCheck.Start();
+    }
+
+    private void OnFormKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            CloseForm();
+        }
+        else if (e.Key == Key.Enter && e.Source != FormDescription && e.KeyModifiers == KeyModifiers.None)
+        {
+            // Enter adds from any one-line field; the description takes new lines.
+            e.Handled = true;
+            OnFormAdd(sender, e);
+        }
+    }
+
+    private DraftCheck ReadForm() => Draft.Check(
+        section, FormClient.Text, FormReference.Text, FormFee.Text, FormSlot.Text, FormTitle.Text,
+        FormDescription.Text, text);
+
+    /// <summary>
+    /// Checks the form as it's filled in. The window's own checks come first; once they pass, a dry run asks commis,
+    /// so anything it would refuse shows before Add is pressed. A blank required field isn't called out until then.
+    /// </summary>
+    private async Task CheckFormAsync()
+    {
+        var check = ReadForm();
+        if (check.Record is null)
+        {
+            ShowFormProblem(check.Missing ? null : check.Problem);
+            return;
+        }
+
+        if (client is null)
+        {
+            return;
+        }
+
+        var ticket = ++formChecks;
+        try
+        {
+            await client.AddAsync(check.Record, dryRun: true);
+            if (ticket == formChecks)
+            {
+                ShowFormProblem(null);
+            }
+        }
+        catch (CommisException exception)
+        {
+            // A check that a newer one replaced has nothing to say.
+            if (ticket == formChecks)
+            {
+                ShowFormProblem(exception.Message);
+            }
+        }
+    }
+
+    private async void OnFormAdd(object? sender, RoutedEventArgs e)
+    {
+        if (!formOpen || client is null || !FormAddButton.IsEnabled)
+        {
+            return;
+        }
+
+        var check = ReadForm();
+        if (check.Record is not { } record)
+        {
+            ShowFormProblem(check.Problem);
+            FieldFor(check.Field)?.Focus();
+            return;
+        }
+
+        formCheck.Stop();
+        formChecks++;
+        FormAddButton.IsEnabled = false;
+        try
+        {
+            await client.AddAsync(record, dryRun: false);
+        }
+        catch (CommisException exception)
+        {
+            // The form stays as it was, with commis's reason under it.
+            ShowFormProblem(exception.Message);
+            FormAddButton.IsEnabled = true;
+            return;
+        }
+
+        var type = section.RecordType();
+        CloseForm();
+        await RefreshAsync();
+
+        // Show what was just added: the newest record of the section's type.
+        var added = records.Where(each => each.Type == type).Select(each => (int?)each.Id).Max();
+        if (added is not null)
+        {
+            filters[section] = null;
+            selectedId = added;
+            Render();
+        }
+    }
+
+    private void ShowFormProblem(string? problem)
+    {
+        FormProblem.Text = problem;
+        FormProblem.IsVisible = problem is not null;
+    }
+
+    private TextBox? FieldFor(DraftField? field) => field switch
+    {
+        DraftField.Client => FormClient,
+        DraftField.Reference => FormReference,
+        DraftField.Fee => FormFee,
+        DraftField.Slot => FormSlot,
+        _ => null,
+    };
 
     // The bar, adapted from Roundhouse
 

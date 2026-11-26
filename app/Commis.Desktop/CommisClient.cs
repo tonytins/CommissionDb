@@ -1,7 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
+
+using Commis.Desktop.Records;
 
 namespace Commis.Desktop;
 
@@ -53,7 +56,7 @@ internal sealed class CommisClient(string executable, InterfaceText text)
     internal async Task SetStatusAsync(int id, string status, CancellationToken cancellationToken = default)
     {
         var result = await RunAsync(
-            ["status", id.ToString(System.Globalization.CultureInfo.InvariantCulture), "--set", status],
+            ["status", id.ToString(CultureInfo.InvariantCulture), "--set", status],
             cancellationToken);
         if (result.ExitCode != 0)
         {
@@ -62,24 +65,74 @@ internal sealed class CommisClient(string executable, InterfaceText text)
     }
 
     /// <summary>
+    /// Adds a record with <c>commis add</c>, or, with <paramref name="dryRun"/>, asks commis whether it would, without
+    /// keeping anything.
+    /// </summary>
+    /// <exception cref="CommisException">commis couldn't be run, or refused, in its own words.</exception>
+    internal async Task AddAsync(NewRecord record, bool dryRun, CancellationToken cancellationToken = default)
+    {
+        // Each value is joined to its flag with "=", so one that starts with "-" still reads as a value.
+        List<string> arguments =
+        [
+            "add",
+            $"--client={record.Client}",
+            $"--reference={record.Reference}",
+            $"--fee={record.Fee.ToString(CultureInfo.InvariantCulture)}",
+        ];
+        if (record.Description.Length > 0)
+        {
+            arguments.Add($"--description={record.Description}");
+        }
+
+        if (record.Title is not null)
+        {
+            arguments.Add($"--title={record.Title}");
+        }
+
+        if (record.Slot is { } slot)
+        {
+            arguments.Add($"--slot={slot.ToString(CultureInfo.InvariantCulture)}");
+        }
+
+        if (dryRun)
+        {
+            arguments.Add("--dry-run");
+        }
+
+        var result = await RunAsync(arguments, cancellationToken);
+        if (result.ExitCode != 0)
+        {
+            throw new CommisException(Explain(result, text));
+        }
+    }
+
+    /// <summary>
     /// The sentence to show for a run that produced no answer. What the command wrote on standard error comes first,
-    /// then standard output when it isn't JSON, then the exit code.
+    /// then standard output when it isn't JSON, then the exit code. Only the first line is shown, without the "Error: "
+    /// that ArgumentParser puts before it, since the usage lines that follow are for a terminal.
     /// </summary>
     internal static string Explain(CommandResult result, InterfaceText text)
     {
         if (!string.IsNullOrWhiteSpace(result.StandardError))
         {
-            return result.StandardError.Trim();
+            return Sentence(result.StandardError);
         }
 
         if (!string.IsNullOrWhiteSpace(result.StandardOutput) && !LooksLikeJson(result.StandardOutput))
         {
-            return result.StandardOutput.Trim();
+            return Sentence(result.StandardOutput);
         }
 
         return result.ExitCode == 0
             ? text.Get(TextKeys.ProblemUnreadable)
             : text.Get(TextKeys.ProblemExitCode, result.ExitCode);
+    }
+
+    private static string Sentence(string output)
+    {
+        var line = output.Split('\n').Select(each => each.Trim()).First(each => each.Length > 0);
+        const string prefix = "Error: ";
+        return line.StartsWith(prefix, StringComparison.Ordinal) ? line[prefix.Length..] : line;
     }
 
     // The answer wins over the exit code: a command that wrote the contract is a success whatever it returned.

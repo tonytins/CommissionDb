@@ -13,7 +13,18 @@ public sealed class CommisClientTests : IDisposable
     {
         var result = new CommandResult(64, "something else\n", "Error: Missing expected argument '--set <set>'\n");
 
-        Assert.Equal("Error: Missing expected argument '--set <set>'", CommisClient.Explain(result, Shipped.English));
+        Assert.Equal("Missing expected argument '--set <set>'", CommisClient.Explain(result, Shipped.English));
+    }
+
+    [Fact]
+    public void OnlyTheSentenceIsShownNotTheUsage()
+    {
+        var result = new CommandResult(
+            64,
+            "",
+            "\nError: Fee must be a non-negative number.\nUsage: commis add --client <client>\n  See 'commis add --help'.\n");
+
+        Assert.Equal("Fee must be a non-negative number.", CommisClient.Explain(result, Shipped.English));
     }
 
     [Fact]
@@ -84,15 +95,17 @@ public sealed class CommisClientTests : IDisposable
     [Fact]
     public async Task FiltersArePassedAsFlags()
     {
-        var client = new CommisClient(Script("""
-            printf '%s\n' "$@" >&2
-            exit 1
+        var log = Path.Combine(root.FullName, "arguments");
+        var client = new CommisClient(Script($$"""
+            printf '%s\n' "$@" > '{{log}}'
+            printf '%s' '{"version":1,"records":[]}'
             """), Shipped.English);
 
-        var problem = await Assert.ThrowsAsync<CommisException>(() =>
-            client.ListRecordsAsync("paid", "ych", TestContext.Current.CancellationToken));
+        await client.ListRecordsAsync("paid", "ych", TestContext.Current.CancellationToken);
 
-        Assert.Equal("list\n--json\n--status\npaid\n--type\nych", problem.Message);
+        Assert.Equal(
+            "list\n--json\n--status\npaid\n--type\nych\n",
+            await File.ReadAllTextAsync(log, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -136,6 +149,55 @@ public sealed class CommisClientTests : IDisposable
             client.SetStatusAsync(99, "paid", TestContext.Current.CancellationToken));
 
         Assert.Equal("No record with ID 99.", problem.Message);
+    }
+
+    [Fact]
+    public async Task AddPassesEachValueJoinedToItsFlag()
+    {
+        var log = Path.Combine(root.FullName, "arguments");
+        var client = new CommisClient(Script($"""
+            printf '%s\n' "$@" > '{log}'
+            """), Shipped.English);
+
+        await client.AddAsync(
+            new Records.NewRecord("-Dash", "ref", "Two\nlines", 25.5m, "Synthesize", 4),
+            dryRun: true,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            "add\n--client=-Dash\n--reference=ref\n--fee=25.5\n--description=Two\nlines\n--title=Synthesize\n--slot=4\n--dry-run\n",
+            await File.ReadAllTextAsync(log, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task AddLeavesOutWhatACommissionDoesntHave()
+    {
+        var log = Path.Combine(root.FullName, "arguments");
+        var client = new CommisClient(Script($"""
+            printf '%s\n' "$@" > '{log}'
+            """), Shipped.English);
+
+        await client.AddAsync(
+            new Records.NewRecord("Alberta", "ref", "", 43m, null, null), dryRun: false, TestContext.Current.CancellationToken);
+
+        Assert.Equal(
+            "add\n--client=Alberta\n--reference=ref\n--fee=43\n",
+            await File.ReadAllTextAsync(log, TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task ARefusedAddCarriesCommissSentence()
+    {
+        var client = new CommisClient(Script("""
+            echo "Error: Fee must be a non-negative number." >&2
+            echo "Usage: commis add" >&2
+            exit 64
+            """), Shipped.English);
+
+        var problem = await Assert.ThrowsAsync<CommisException>(() => client.AddAsync(
+            new Records.NewRecord("A", "r", "", -1m, null, null), dryRun: true, TestContext.Current.CancellationToken));
+
+        Assert.Equal("Fee must be a non-negative number.", problem.Message);
     }
 
     [Fact]
