@@ -39,7 +39,7 @@ struct Add: ParsableCommand {
     }
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
         let type = slot != nil ? RecordType.ych : .commission
 
         let record = Records(

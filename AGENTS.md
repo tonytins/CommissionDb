@@ -2,19 +2,19 @@
 
 ## Project Structure
 
-Commission Database, aka **cdb**, is a Swift 6 command-line tool for tracking
-commissions and YCH transactions in a local SQLite database and exporting them
-to CSV. The package name is `CommissionDb`; the executable is `cdb`.
+Commis is a Swift 6 command-line tool for tracking commissions and YCH
+transactions in a local SQLite database and exporting them to CSV. The package
+name is `Commis`; the executable is `commis`.
 
 ```
-Sources/CommissionDb/
-  CommissionDb.swift      # @main, subcommand registration, version
-  commissiondb.sql        # schema; Enlighter generates DB types from this
+Sources/Commis/
+  CommisCommand.swift     # @main, subcommand registration, version
+  commis.sql              # schema; Enlighter generates the Commis type from this
   Commands/               # one file per subcommand; Raffle/ groups raffle commands
   Model/                  # enums, timestamps, raffle picking and import parsing
   Storage/                # database bootstrap, migrations, raffle operations
   Output/                 # CSV and display formatting
-Tests/CommissionDbTests/
+Tests/CommisTests/
 docs/superpowers/specs/   # design documents for larger changes
 Package.swift
 GitVersion.txt            # version being built
@@ -28,9 +28,8 @@ approval.
 
 Two build plugins generate source into `.build/`, so never edit those files:
 
-- `Enlighter` reads `commissiondb.sql` and generates the `Commissiondb`
-  database type, the `Records`, `Raffles`, and `RaffleEntries` records, and
-  their CRUD operations.
+- `Enlighter` reads `commis.sql` and generates the `Commis` database type, the
+  `Records`, `Raffles`, and `RaffleEntries` records, and their CRUD operations.
 - `GitVersionPlugin` reads `GitVersion.txt` / `GitVersion.env` and generates
   the `GitVersion` namespace.
 
@@ -52,10 +51,10 @@ for style and conventions. Where it disagrees with this file, this file wins.
 
 ## Database
 
-- The schema lives in `Sources/CommissionDb/commissiondb.sql`. Change it there,
+- The schema lives in `Sources/Commis/commis.sql`. Change it there,
   then let Enlighter regenerate the types; don't hand-write SQL in commands.
-- `Commissiondb.open()` (in `Storage/Database.swift`) bootstraps a new database
-  and migrates an existing one. `commissiondb.sql` ends with
+- `Commis.open()` (in `Storage/Database.swift`) bootstraps a new database
+  and migrates an existing one. `commis.sql` ends with
   `PRAGMA user_version = N`; `Migrations.swift` holds the matching v0→v1 steps.
 - Migrations are historical: once a version ships, never edit its step. Add a
   new step, bump `PRAGMA user_version`, and cover it with a test that starts
@@ -64,7 +63,9 @@ for style and conventions. Where it disagrees with this file, this file wins.
   `raffles` and `raffle_entries` tables and become `records` only on
   fulfillment.
 - The database file lives in the platform application-support directory. Tests
-  must use a temporary file, never the user's real database.
+  must use a temporary file, never the user's real database. A database from
+  before the rename (`cdb/commissiondb.sqlite3`) is used in place when the new
+  `commis/commis.sqlite3` does not exist yet.
 - Enums are stored as their raw strings so the database stays readable without
   the app. Keep the enum raw values in sync with the SQL `CHECK` constraints.
 
@@ -92,7 +93,7 @@ file, not the latest tag, names the version being built.
   `@Flag`) for all CLI surface. Don't parse `CommandLine.arguments` by hand.
 - Prefer `ExpressibleByArgument` enums over free-form strings for options with
   a fixed set of values; ArgumentParser then validates and lists them for free.
-- Keep `CommissionDb.swift` focused on the CLI structure. Extract logic (CSV
+- Keep `CommisCommand.swift` focused on the CLI structure. Extract logic (CSV
   formatting, file I/O, record types) into separate files.
 - Validate all user input before using it. Report bad input through
   `ArgumentParser`'s `ValidationError` where possible; use `throw` elsewhere.

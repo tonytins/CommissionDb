@@ -20,7 +20,7 @@ struct RaffleDraw: ParsableCommand {
     }
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
         let picked = try db.draw(raffleId, winners: winners)
 
         let raffle = try db.raffle(raffleId)

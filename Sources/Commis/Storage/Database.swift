@@ -1,9 +1,9 @@
 import Foundation
 import Lighter
 
-extension Commissiondb {
+extension Commis {
     /// Opens the database at the platform data path.
-    static func open() throws -> Commissiondb {
+    static func open() throws -> Commis {
         try open(at: AppDataPath.databaseURL)
     }
 
@@ -12,7 +12,7 @@ extension Commissiondb {
     /// A missing or empty file is created with the latest schema by
     /// `bootstrap`, which also records the schema version. An existing file is
     /// migrated in place.
-    static func open(at url: URL) throws -> Commissiondb {
+    static func open(at url: URL) throws -> Commis {
         let exists = FileManager.default.fileExists(atPath: url.path)
         let isEmpty = exists && fileSize(at: url) == 0
 

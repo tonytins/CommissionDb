@@ -14,7 +14,7 @@ struct List: ParsableCommand {
     var type: RecordType?
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
         let records = try db.fetchRecords(status: status, type: type)
 
         guard !records.isEmpty else {

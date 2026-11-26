@@ -16,7 +16,7 @@ struct Export: ParsableCommand {
     var type: RecordType?
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
         let records = try db.fetchRecords(status: status, type: type)
 
         print("Date,Type,Client,Reference,Description,Fee,Title,Slot,Status")

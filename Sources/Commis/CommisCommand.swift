@@ -2,10 +2,10 @@ import ArgumentParser
 import GitVersion
 
 @main
-struct CommissionDb: ParsableCommand {
+struct CommisCommand: ParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "cdb",
-        abstract: "Commission Database — track commissions and YCH transactions.",
+        commandName: "commis",
+        abstract: "Track commissions, YCH transactions, and art raffles.",
         version: GitVersion.version,
         subcommands: [
             Add.self, List.self, Export.self, UpdateStatus.self, Raffle.self,

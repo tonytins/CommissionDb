@@ -11,7 +11,7 @@ struct RaffleShow: ParsableCommand {
     var raffleId: Int
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
 
         guard let raffle = try db.raffles.find(raffleId) else {
             print("No raffle with ID \(raffleId).")

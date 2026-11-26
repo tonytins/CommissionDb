@@ -1,22 +1,22 @@
 import Foundation
 import Lighter
 import Testing
-@testable import CommissionDb
+@testable import Commis
 
 /// Creates a throwaway database file and removes it when the test finishes.
 @discardableResult
 func withTemporaryDatabase<T>(
-    _ body: (Commissiondb) throws -> T
+    _ body: (Commis) throws -> T
 ) throws -> T {
     let url = temporaryDatabaseURL()
     defer { try? FileManager.default.removeItem(at: url) }
-    return try body(try Commissiondb.open(at: url))
+    return try body(try Commis.open(at: url))
 }
 
 /// A unique path under the temporary directory, not yet created.
 func temporaryDatabaseURL() -> URL {
     FileManager.default.temporaryDirectory
-        .appendingPathComponent("cdb-test-\(UUID().uuidString)")
+        .appendingPathComponent("commis-test-\(UUID().uuidString)")
         .appendingPathExtension("sqlite3")
 }
 

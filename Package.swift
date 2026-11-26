@@ -3,9 +3,9 @@
 import PackageDescription
 
 let package = Package(
-    name: "CommissionDb",
+    name: "Commis",
     products: [
-        .executable(name: "cdb", targets: ["CommissionDb"]),
+        .executable(name: "commis", targets: ["Commis"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0"),
@@ -14,7 +14,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "CommissionDb",
+            name: "Commis",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Lighter", package: "Lighter"),
@@ -26,8 +26,8 @@ let package = Package(
             ]
         ),
         .testTarget(
-            name: "CommissionDbTests",
-            dependencies: ["CommissionDb"]
+            name: "CommisTests",
+            dependencies: ["Commis"]
         ),
     ],
     swiftLanguageModes: [.v6]

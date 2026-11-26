@@ -5,13 +5,13 @@ Status: implemented (2026-11-23)
 
 ## Intent
 
-cdb tracks art commissions and YCH work. Artists also run art raffles: they
+Commis tracks art commissions and YCH work. Artists also run art raffles: they
 offer a prize, collect entries for a limited window, draw a winner at random,
-and then owe that winner a piece of art. Today cdb cannot help with any of
-that, so the artist keeps entries in a spreadsheet or comment thread and draws
-with a separate tool.
+and then owe that winner a piece of art. Before this change Commis could not
+help with any of that, so the artist kept entries in a spreadsheet or comment
+thread and drew with a separate tool.
 
-This design adds raffles to cdb so the artist can keep entries in one place,
+This design adds raffles to Commis so the artist can keep entries in one place,
 draw fairly enough to show the result, and turn the winner into a normal fee-0
 record so the prize is tracked alongside commissions and YCH.
 
@@ -38,7 +38,6 @@ or a social-media scraper.
 - Currency handling beyond the artist's own unit (matches current fees).
 - A provably fair draw with a published seed. v1 uses the system RNG and
   prints a transcript; a seed option can come later.
-- The `commis` rename (planned separately).
 
 ## Constraints
 
@@ -47,14 +46,14 @@ or a social-media scraper.
   tables because they are one-to-many and have different statuses.
 - Existing databases must be migrated in place, never dropped.
 - Tests must not touch the real database.
-- The executable and package will be renamed to `commis` later, so keep the
-  app name and data path in one place.
+- The package, executable, and data paths are named `commis`; keep the app name
+  and data path in one place.
 
 ## Approaches considered
 
 1. **Raffle as a record type.** Add `raffle` to `records.type`. Rejected: no
    place for entrants, and the commission statuses do not describe a raffle.
-2. **Draw-only helper.** `cdb draw entries.txt`. Rejected as the whole
+2. **Draw-only helper.** `commis draw entries.txt`. Rejected as the whole
    feature: it solves fairness but leaves the bookkeeping (the actual burden)
    untouched. It remains a possible future flag.
 3. **Raffle and entrants as their own tables, with draw and fulfill.** Chosen.
@@ -63,7 +62,7 @@ or a social-media scraper.
 
 ### Schema (version 1)
 
-Final schema in `commissiondb.sql`:
+Final schema in `commis.sql`:
 
 ```sql
 CREATE TABLE records (
@@ -120,10 +119,10 @@ Notes:
 
 ### Migration
 
-`open()` becomes `static func open(at url: URL) throws -> Commissiondb`:
+`open()` becomes `static func open(at url: URL) throws -> Commis`:
 
 - File does not exist: `bootstrap(at:)` creates the latest schema, then set
-  `user_version` to `Commissiondb.userVersion`.
+  `user_version` to `Commis.userVersion`.
 - File exists and `user_version < 1`: run the v0→v1 migration in a
   transaction, then set the version.
 - File exists and is current: open.
@@ -144,15 +143,15 @@ call `open(at:)` with a temporary URL.
 ### Commands
 
 ```
-cdb raffle add    --title <title> [--prize <text>] [--ticket-price <n>]
+commis raffle add    --title <title> [--prize <text>] [--ticket-price <n>]
                   [--opens <date>] [--ends <date>]
-cdb raffle enter  <raffle-id> --name <name> [--reference <url>] [--tickets <n>]
-cdb raffle import <raffle-id> <file> [--csv]
-cdb raffle list   [--status <status>]
-cdb raffle show   <raffle-id>
-cdb raffle draw   <raffle-id> [--winners <n>]
-cdb raffle fulfill <raffle-id> --type commission|ych
-cdb raffle cancel <raffle-id>
+commis raffle enter  <raffle-id> --name <name> [--reference <url>] [--tickets <n>]
+commis raffle import <raffle-id> <file> [--csv]
+commis raffle list   [--status <status>]
+commis raffle show   <raffle-id>
+commis raffle draw   <raffle-id> [--winners <n>]
+commis raffle fulfill <raffle-id> --type commission|ych
+commis raffle cancel <raffle-id>
 ```
 
 - `add` prints the new raffle ID.
@@ -193,8 +192,8 @@ tests can inject a seeded one.
 ### Files
 
 ```
-Sources/CommissionDb/
-  commissiondb.sql              # updated schema + PRAGMA user_version
+Sources/Commis/
+  commis.sql                    # updated schema + PRAGMA user_version
   Commands/
     Raffle/                     # RaffleAdd, RaffleEnter, RaffleImport,
                                 # RaffleList, RaffleShow, RaffleDraw,
@@ -209,7 +208,7 @@ Sources/CommissionDb/
     Database.swift              # open(at:), fetchRecords, fetchRaffles
     Migrations.swift            # v0 -> v1
     Raffles.swift               # enter, draw, fulfill, cancel
-Tests/CommissionDbTests/
+Tests/CommisTests/
   RafflePickerTests.swift
   RaffleImportTests.swift
   RaffleCommandTests.swift      # temp-DB integration
@@ -232,19 +231,21 @@ than in the command, so it can be tested without touching a database.
   and `user_version == 1`.
 - `swift build` with no warnings; `swift test` green.
 
-## Later: rename to `commis`
+## Rename to `commis` (completed)
 
-Not part of this change. When it happens:
+Done after raffles landed:
 
-- `Package.swift`: package, product, executable, and target names.
+- `Package.swift`: package, product, executable, and target names are `Commis`
+  / `commis`.
+- Source and test directories are `Sources/Commis` and `Tests/CommisTests`;
+  the schema file is `commis.sql`, so Enlighter generates the `Commis` database
+  type. The `@main` type is `CommisCommand` to avoid clashing with it.
 - `AppDataPath`: directory `cdb` → `commis`, filename
-  `commissiondb.sqlite3` → `commis.sqlite3`.
-- Docs and the GitVersion repository URL.
-- Existing databases need a one-time move from the old path, or the app should
-  fall back to the old path when the new one is absent.
-
-Keeping the directory name and DB filename in `AppDataPath` makes this a small
-change.
+  `commissiondb.sqlite3` → `commis.sqlite3`. An existing
+  `cdb/commissiondb.sqlite3` is used in place when the new file is absent, so
+  no manual move is needed.
+- Docs use the new name. The GitHub repository URL is unchanged; GitHub
+  redirects old links.
 
 ## What's left to the builder
 

@@ -36,7 +36,7 @@ enum RaffleError: Error, Equatable, CustomStringConvertible {
     }
 }
 
-extension Commissiondb {
+extension Commis {
     /// Fetches a raffle, or throws `RaffleError.notFound`.
     func raffle(_ id: Int) throws -> Raffles {
         guard let raffle = try self.raffles.find(id) else {

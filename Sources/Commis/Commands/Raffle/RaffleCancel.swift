@@ -11,7 +11,7 @@ struct RaffleCancel: ParsableCommand {
     var raffleId: Int
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
         try db.cancel(raffleId)
         print("Cancelled raffle #\(raffleId).")
     }

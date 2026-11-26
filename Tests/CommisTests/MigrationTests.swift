@@ -1,9 +1,9 @@
 import Foundation
 import Lighter
 import Testing
-@testable import CommissionDb
+@testable import Commis
 
-/// The schema cdb shipped before raffles (version 0).
+/// The schema shipped before raffles (version 0).
 private let v0Schema = [
     """
     CREATE TABLE records (
@@ -33,7 +33,7 @@ private let v0Schema = [
 func freshDatabaseHasCurrentVersion() throws {
     try withTemporaryDatabase { db in
         let version = try db.get(pragma: "user_version", as: Int.self)
-        #expect(version == Commissiondb.userVersion)
+        #expect(version == Commis.userVersion)
     }
 }
 
@@ -45,7 +45,7 @@ func migratesVersionZero() throws {
     // Build a version 0 file: old column name, no raffle tables.
     try createLegacyDatabase(at: url)
 
-    let db = try Commissiondb.open(at: url)
+    let db = try Commis.open(at: url)
 
     #expect(try db.get(pragma: "user_version", as: Int.self) == 1)
 
@@ -67,10 +67,10 @@ func migrationIsIdempotent() throws {
     let url = temporaryDatabaseURL()
     defer { try? FileManager.default.removeItem(at: url) }
 
-    let first = try Commissiondb.open(at: url)
+    let first = try Commis.open(at: url)
     _ = try first.insert(makeRecord(client: "Existing"))
 
-    let second = try Commissiondb.open(at: url)
+    let second = try Commis.open(at: url)
     #expect(try second.get(pragma: "user_version", as: Int.self) == 1)
     #expect(try second.fetchRecords().count == 1)
 }
@@ -83,7 +83,7 @@ func emptyFileIsInitialized() throws {
         throw CocoaError(.fileWriteUnknown)
     }
 
-    let db = try Commissiondb.open(at: url)
+    let db = try Commis.open(at: url)
 
     #expect(try db.get(pragma: "user_version", as: Int.self) == 1)
     #expect(try db.insert(makeRecord()).id > 0)
@@ -94,13 +94,13 @@ func futureVersionIsRefused() throws {
     let url = temporaryDatabaseURL()
     defer { try? FileManager.default.removeItem(at: url) }
 
-    let db = try Commissiondb.open(at: url)
+    let db = try Commis.open(at: url)
     try db.execute("PRAGMA user_version = 99")
 
     #expect(
-        throws: MigrationError.futureVersion(found: 99, supported: Commissiondb.userVersion)
+        throws: MigrationError.futureVersion(found: 99, supported: Commis.userVersion)
     ) {
-        try Commissiondb.open(at: url)
+        try Commis.open(at: url)
     }
 }
 
@@ -110,7 +110,7 @@ private func createLegacyDatabase(at url: URL) throws {
         throw CocoaError(.fileWriteUnknown)
     }
 
-    let legacy = Commissiondb(url: url)
+    let legacy = Commis(url: url)
     for statement in v0Schema {
         try legacy.execute(statement)
     }

@@ -9,7 +9,7 @@ enum MigrationError: Error, Equatable, CustomStringConvertible {
         case .futureVersion(let found, let supported):
             return """
             This database uses schema version \(found), but this build \
-            supports \(supported). Upgrade cdb before opening it.
+            supports \(supported). Upgrade commis before opening it.
             """
         }
     }
@@ -20,15 +20,15 @@ enum MigrationError: Error, Equatable, CustomStringConvertible {
 /// Migrations are historical: once shipped, never edit them. Add a new step
 /// for the next schema version instead.
 enum Migrations {
-    /// Brings `db` up to `Commissiondb.userVersion`.
-    static func apply(to db: Commissiondb) throws {
+    /// Brings `db` up to `Commis.userVersion`.
+    static func apply(to db: Commis) throws {
         let version = try db.get(pragma: "user_version", as: Int.self)
-        if version > Commissiondb.userVersion {
+        if version > Commis.userVersion {
             throw MigrationError.futureVersion(
-                found: version, supported: Commissiondb.userVersion
+                found: version, supported: Commis.userVersion
             )
         }
-        guard version < Commissiondb.userVersion else { return }
+        guard version < Commis.userVersion else { return }
 
         try db.transaction { tx in
             if version < 1 {
@@ -43,7 +43,7 @@ enum Migrations {
     /// v1 renames the column, adds `raffles` and `raffle_entries`, and indexes
     /// the foreign key column.
     private static func migrateToV1(
-        _ tx: SQLChangeTransaction<Commissiondb>
+        _ tx: SQLChangeTransaction<Commis>
     ) throws {
         try tx.execute("ALTER TABLE records RENAME COLUMN ych_title TO title")
 

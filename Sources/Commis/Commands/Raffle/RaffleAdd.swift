@@ -41,7 +41,7 @@ struct RaffleAdd: ParsableCommand {
     }
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
         let raffle = Raffles(
             date: Timestamps.now(),
             title: title,

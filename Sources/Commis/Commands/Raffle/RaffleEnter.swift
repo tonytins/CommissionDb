@@ -26,7 +26,7 @@ struct RaffleEnter: ParsableCommand {
     }
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
         let entry = try db.enter(
             raffleId,
             draft: RaffleEntryDraft(name: name, reference: reference, tickets: tickets)

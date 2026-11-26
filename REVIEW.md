@@ -1,6 +1,6 @@
 # Review Guide
 
-Use this checklist when reviewing a change to cdb.
+Use this checklist when reviewing a change to commis.
 
 ## Before Reviewing
 
@@ -18,7 +18,7 @@ Use this checklist when reviewing a change to cdb.
   existing command surface? Could the change break existing callers or scripts?
 - Is CSV output format-correct (quoting, field order, header presence) for both
   commission and YCH paths?
-- If the schema or an enum changed, do `commissiondb.sql` and the Swift enum
+- If the schema or an enum changed, do `commis.sql` and the Swift enum
   raw values still agree? Does `PRAGMA user_version` change, and is there a
   migration step that preserves existing rows? Was an already-shipped migration
   step edited?

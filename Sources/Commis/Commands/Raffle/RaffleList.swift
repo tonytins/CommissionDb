@@ -11,7 +11,7 @@ struct RaffleList: ParsableCommand {
     var status: RaffleStatus?
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
         let raffles = try db.fetchRaffles(status: status)
 
         guard !raffles.isEmpty else {

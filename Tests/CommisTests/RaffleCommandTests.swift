@@ -1,6 +1,6 @@
 import Lighter
 import Testing
-@testable import CommissionDb
+@testable import Commis
 
 // MARK: - Entering
 

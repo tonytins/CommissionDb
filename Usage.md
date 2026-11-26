@@ -1,11 +1,11 @@
 # Usage
 
-`cdb` stores commissions, YCH entries, and art raffles in a local SQLite
-database and can export records to CSV. Running `cdb` with no subcommand lists
+`commis` stores commissions, YCH entries, and art raffles in a local SQLite
+database and can export records to CSV. Running `commis` with no subcommand lists
 every record.
 
 ```
-cdb <subcommand>
+commis <subcommand>
 ```
 
 | Subcommand | Purpose |
@@ -23,12 +23,16 @@ application-support directory:
 
 | Platform | Path |
 | -------- | ---- |
-| Linux    | `~/.local/share/cdb/commissiondb.sqlite3` (or `$XDG_DATA_HOME/cdb/`) |
-| macOS    | `~/Library/Application Support/cdb/commissiondb.sqlite3` |
-| Windows  | `%APPDATA%\cdb\commissiondb.sqlite3` |
+| Linux    | `~/.local/share/commis/commis.sqlite3` (or `$XDG_DATA_HOME/commis/`) |
+| macOS    | `~/Library/Application Support/commis/commis.sqlite3` |
+| Windows  | `%APPDATA%\commis\commis.sqlite3` |
 
 The database and its tables are created automatically the first time a command
 runs. Older databases are migrated in place; the data is kept.
+
+Databases created before the rename live in `cdb/commissiondb.sqlite3`. If the
+new file does not exist yet, `commis` uses the old file in place, so existing
+data keeps working without a manual move.
 
 ## Statuses
 
@@ -45,7 +49,7 @@ Raffles have their own lifecycle:
 ## Commissions
 
 ```sh
-cdb add --client "Alberta Mann" \
+commis add --client "Alberta Mann" \
         --reference "https://www.furaffinity.net/view/64746038/" \
         --fee 43 \
         --description "Lorem ipsum dolor sit amet."
@@ -70,7 +74,7 @@ optional for both. There is no longer a separate `--ych-title` flag, and no
 rule forcing `--title` and `--slot` to appear together.
 
 ```sh
-cdb add --client "Bessie Hettinger" \
+commis add --client "Bessie Hettinger" \
         --reference "https://www.furaffinity.net/view/64746038/" \
         --fee 25 \
         --title "Synthesize" \
@@ -80,28 +84,28 @@ cdb add --client "Bessie Hettinger" \
 ## Listing
 
 ```sh
-cdb list                      # everything
-cdb list --status pending     # only unpaid work
-cdb list --type ych           # only YCH entries
+commis list                      # everything
+commis list --status pending     # only unpaid work
+commis list --type ych           # only YCH entries
 ```
 
 Each record prints its ID, status, type, title, client, reference, description,
-fee, and date. IDs are what `cdb status` accepts.
+fee, and date. IDs are what `commis status` accepts.
 
 ## Changing status
 
 ```sh
-cdb status 1 --set paid
+commis status 1 --set paid
 ```
 
-The ID comes from `cdb list` or `cdb export`. Unknown IDs exit with a non-zero
+The ID comes from `commis list` or `commis export`. Unknown IDs exit with a non-zero
 status.
 
 ## Exporting
 
 ```sh
-cdb export > commissions.csv
-cdb export --status paid --type commission
+commis export > commissions.csv
+commis export --status paid --type commission
 ```
 
 CSV is written to stdout with a header row and these columns:
@@ -115,8 +119,8 @@ All fields are quoted and internal double-quotes are doubled, per RFC 4180.
 `Title` and `Slot` are empty for records without them; fees use two decimal
 places.
 
-Raffles are not part of the CSV export; use `cdb raffle list` and
-`cdb raffle show` for raffle data.
+Raffles are not part of the CSV export; use `commis raffle list` and
+`commis raffle show` for raffle data.
 
 ## Raffles
 
@@ -127,7 +131,7 @@ you fulfill a raffle, each winner becomes a normal fee-0 record, so `list` and
 ### Create
 
 ```sh
-cdb raffle add --title "Synthesize" \
+commis raffle add --title "Synthesize" \
                --prize "full-body YCH" \
                --ticket-price 5 \
                --ends 2026-12-01
@@ -146,7 +150,7 @@ The new raffle ID is printed. `--opens` must not be after `--ends`.
 ### Collect entries
 
 ```sh
-cdb raffle enter 1 --name "Bessie" --reference "https://example.com/bessie" --tickets 3
+commis raffle enter 1 --name "Bessie" --reference "https://example.com/bessie" --tickets 3
 ```
 
 `--tickets` defaults to 1 and sets the entrant's weight in the draw. Entries
@@ -155,8 +159,8 @@ are only accepted while the raffle is `open`.
 To import a list:
 
 ```sh
-cdb raffle import 1 entries.txt          # one name per line
-cdb raffle import 1 entries.csv --csv    # header: name,reference,tickets
+commis raffle import 1 entries.txt          # one name per line
+commis raffle import 1 entries.csv --csv    # header: name,reference,tickets
 ```
 
 The CSV header must include `name`; `reference` and `tickets` are optional, and
@@ -167,9 +171,9 @@ inserted unless the whole file parses.
 ### Review
 
 ```sh
-cdb raffle list                  # all raffles with entry and ticket counts
-cdb raffle list --status open
-cdb raffle show 1                # one raffle and its entries
+commis raffle list                  # all raffles with entry and ticket counts
+commis raffle list --status open
+commis raffle show 1                # one raffle and its entries
 ```
 
 Winners are marked `[winner]` in `raffle show`.
@@ -177,8 +181,8 @@ Winners are marked `[winner]` in `raffle show`.
 ### Draw
 
 ```sh
-cdb raffle draw 1
-cdb raffle draw 1 --winners 2
+commis raffle draw 1
+commis raffle draw 1 --winners 2
 ```
 
 Only `open` raffles can be drawn, there must be at least as many entries as
@@ -193,7 +197,7 @@ they close before drawing.
 ### Fulfill
 
 ```sh
-cdb raffle fulfill 1 --type ych
+commis raffle fulfill 1 --type ych
 ```
 
 This creates one pending, fee-0 record per winner, using the raffle title as
@@ -203,7 +207,7 @@ description. The raffle becomes `fulfilled`.
 ### Cancel
 
 ```sh
-cdb raffle cancel 1
+commis raffle cancel 1
 ```
 
 Cancels an `open` or `drawn` raffle without deleting its entries. `fulfilled`

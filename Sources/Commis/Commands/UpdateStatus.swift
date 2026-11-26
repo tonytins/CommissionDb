@@ -15,7 +15,7 @@ struct UpdateStatus: ParsableCommand {
     var set: Status
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
 
         guard var record = try db.records.find(id) else {
             print("No record with ID \(id).")

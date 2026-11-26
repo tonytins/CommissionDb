@@ -18,7 +18,7 @@ struct RaffleImport: ParsableCommand {
     var csv = false
 
     mutating func run() throws {
-        let db = try Commissiondb.open()
+        let db = try Commis.open()
 
         let text: String
         do {

@@ -1,7 +1,7 @@
 import Foundation
 import Lighter
 import Testing
-@testable import CommissionDb
+@testable import Commis
 
 @Test("Bootstrap creates the schema and round-trips a record")
 func databaseRoundTrip() throws {

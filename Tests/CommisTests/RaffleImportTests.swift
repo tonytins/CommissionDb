@@ -1,5 +1,5 @@
 import Testing
-@testable import CommissionDb
+@testable import Commis
 
 // MARK: - Plain text
 

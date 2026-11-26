@@ -1,5 +1,5 @@
 import Testing
-@testable import CommissionDb
+@testable import Commis
 
 /// Deterministic generator so draw tests are repeatable.
 private struct SeededGenerator: RandomNumberGenerator {
