@@ -137,7 +137,7 @@ standard menus.
 
 ```
 ┌────────────────────────────────────────────────────┐
-│ ○ ○ ○   Commis        [Add] [Status] [Export]      │
+│ Commis        [Add] [Status] [Export]   – □ ×      │
 ├─────────────────┬──────────────────────────────────┤
 │ Commissions  12 │ Synthesize            3 entries  │
 │ YCH           7 │   #1  Bessie      paid    $25.00 │
@@ -186,7 +186,9 @@ with roles, never with hex values in views.
 - Surfaces, text, and lines are neutral, after libadwaita; only the accent
   carries color.
 - Both light and dark are supported, and switching reaches the open window.
-- The accent is the app's own choice, and is not settled yet.
+- The accent is blue: libadwaita's `#3584e4` on light and `#78aeed` on dark as
+  the starting values, adjusted if the contrast test says so. Focus, selection,
+  and progress marks use it; nothing else does.
 
 ## In the repository
 
@@ -219,7 +221,9 @@ later step, and would need the Swift runtime or a static build on Linux.
 ## Decisions made here
 
 - Same repository, `app/` beside the Swift sources.
-- Window controls: traffic lights, matching the design language's default.
+- Window controls: Windows-style — minimize, maximize, close on the right — on
+  every platform the app runs on, as the apps book asks. Chosen for an audience
+  that mostly uses Windows, over the design language's traffic lights.
 - No edit or delete in the first version.
 - Export writes a file; it does not open a spreadsheet.
 - A YCH with no slot is shown, sorted last in its group, rather than hidden.
