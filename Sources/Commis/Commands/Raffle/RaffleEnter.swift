@@ -19,6 +19,8 @@ struct RaffleEnter: ParsableCommand {
     @Option(name: .long, help: "Number of tickets.")
     var tickets: Int = 1
 
+    @OptionGroup var options: WriteOptions
+
     mutating func validate() throws {
         guard tickets > 0 else {
             throw ValidationError("--tickets must be greater than zero.")
@@ -26,11 +28,12 @@ struct RaffleEnter: ParsableCommand {
     }
 
     mutating func run() throws {
-        let db = try Commis.open()
-        let entry = try db.enter(
-            raffleId,
-            draft: RaffleEntryDraft(name: name, reference: reference, tickets: tickets)
-        )
-        print("Entry #\(entry.id) for \(name) in raffle #\(raffleId).")
+        try options.withDatabase { db in
+            let entry = try db.enter(
+                raffleId,
+                draft: RaffleEntryDraft(name: name, reference: reference, tickets: tickets)
+            )
+            print("Entry #\(entry.id) for \(name) in raffle #\(raffleId).")
+        }
     }
 }

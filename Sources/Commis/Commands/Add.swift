@@ -32,6 +32,8 @@ struct Add: ParsableCommand {
     @Option(name: .shortAndLong, help: "Initial status.")
     var status: Status = .pending
 
+    @OptionGroup var options: WriteOptions
+
     mutating func validate() throws {
         guard fee >= 0 else {
             throw ValidationError("Fee must be a non-negative number.")
@@ -39,22 +41,23 @@ struct Add: ParsableCommand {
     }
 
     mutating func run() throws {
-        let db = try Commis.open()
-        let type = slot != nil ? RecordType.ych : .commission
+        try options.withDatabase { db in
+            let type = slot != nil ? RecordType.ych : .commission
 
-        let record = Records(
-            date: Timestamps.now(),
-            type: type.rawValue,
-            client: client,
-            reference: reference,
-            description: description,
-            fee: fee,
-            title: title,
-            slot: slot,
-            status: status.rawValue
-        )
+            let record = Records(
+                date: Timestamps.now(),
+                type: type.rawValue,
+                client: client,
+                reference: reference,
+                description: description,
+                fee: fee,
+                title: title,
+                slot: slot,
+                status: status.rawValue
+            )
 
-        let inserted = try db.insert(record)
-        print("Added \(type.label) #\(inserted.id) for \(client).")
+            let inserted = try db.insert(record)
+            print("Added \(type.label) #\(inserted.id) for \(client).")
+        }
     }
 }

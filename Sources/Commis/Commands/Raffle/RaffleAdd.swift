@@ -24,6 +24,8 @@ struct RaffleAdd: ParsableCommand {
     @Option(name: .long, help: "When entries close (ISO 8601 or yyyy-MM-dd).")
     var ends: String?
 
+    @OptionGroup var options: WriteOptions
+
     private var opensDate: Date?
     private var endsDate: Date?
 
@@ -41,19 +43,20 @@ struct RaffleAdd: ParsableCommand {
     }
 
     mutating func run() throws {
-        let db = try Commis.open()
-        let raffle = Raffles(
-            date: Timestamps.now(),
-            title: title,
-            prize: prize,
-            ticketPrice: ticketPrice,
-            opens: opensDate.map(Timestamps.isoString(from:)),
-            ends: endsDate.map(Timestamps.isoString(from:)),
-            status: RaffleStatus.open.rawValue
-        )
+        try options.withDatabase { db in
+            let raffle = Raffles(
+                date: Timestamps.now(),
+                title: title,
+                prize: prize,
+                ticketPrice: ticketPrice,
+                opens: opensDate.map(Timestamps.isoString(from:)),
+                ends: endsDate.map(Timestamps.isoString(from:)),
+                status: RaffleStatus.open.rawValue
+            )
 
-        let inserted = try db.insert(raffle)
-        print("Added raffle #\(inserted.id) \"\(title)\".")
+            let inserted = try db.insert(raffle)
+            print("Added raffle #\(inserted.id) \"\(title)\".")
+        }
     }
 
     private func parseDate(_ value: String?, name: String) throws -> Date? {

@@ -13,12 +13,15 @@ struct RaffleFulfill: ParsableCommand {
     @Option(name: .long, help: "Record type for the prize.")
     var type: RecordType
 
-    mutating func run() throws {
-        let db = try Commis.open()
-        let created = try db.fulfill(raffleId, type: type)
+    @OptionGroup var options: WriteOptions
 
-        for record in created {
-            print("Created \(type.label) #\(record.id) for \(record.client).")
+    mutating func run() throws {
+        try options.withDatabase { db in
+            let created = try db.fulfill(raffleId, type: type)
+
+            for record in created {
+                print("Created \(type.label) #\(record.id) for \(record.client).")
+            }
         }
     }
 }

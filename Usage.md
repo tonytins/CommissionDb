@@ -67,6 +67,7 @@ commis add --client "Alberta Mann" \
 | `-s, --status <status>` | Initial status (default: `pending`) |
 | `--title <title>` | Title of the piece |
 | `--slot <n>` | YCH slot number; implies a YCH entry |
+| `--dry-run` | Check the command and keep nothing; see [Dry runs](#dry-runs) |
 
 ## YCH
 
@@ -122,6 +123,37 @@ places.
 
 Raffles are not part of the CSV export; use `commis raffle list` and
 `commis raffle show` for raffle data.
+
+## Dry runs
+
+Every command that changes the database takes `--dry-run`: `add`, `status`,
+and `raffle add`, `enter`, `import`, `draw`, `fulfill`, and `cancel`. A dry run
+runs the command against a temporary copy of the database and throws the copy
+away, so it reports the same checks, IDs, and messages a real run would, and
+keeps nothing.
+
+```sh
+commis add --client "Bessie" --reference "…" --fee 25 --slot 2 --dry-run
+# Added YCH #8 for Bessie.
+# Dry run: nothing was saved.
+```
+
+The closing notice goes to stderr, so stdout reads the same as a real run's.
+A dry run works on a read-only database, and never migrates the real one.
+
+`raffle draw --dry-run` checks that the draw can happen and names no winners,
+since winners picked on a copy aren't the ones a real draw picks.
+
+## Read-only databases
+
+When the database file, or the folder it's in, can't be written to, commands
+that change it stop before writing and say so:
+
+```
+Error: Can't change the database at …/commis.sqlite3: it or its folder is read-only.
+```
+
+Reading commands such as `list`, `info`, and `export` still work.
 
 ## Machine-readable output
 

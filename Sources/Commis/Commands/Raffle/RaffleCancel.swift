@@ -10,9 +10,12 @@ struct RaffleCancel: ParsableCommand {
     @Argument(help: "Raffle ID.")
     var raffleId: Int
 
+    @OptionGroup var options: WriteOptions
+
     mutating func run() throws {
-        let db = try Commis.open()
-        try db.cancel(raffleId)
-        print("Cancelled raffle #\(raffleId).")
+        try options.withDatabase { db in
+            try db.cancel(raffleId)
+            print("Cancelled raffle #\(raffleId).")
+        }
     }
 }

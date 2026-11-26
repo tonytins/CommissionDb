@@ -17,26 +17,28 @@ struct RaffleImport: ParsableCommand {
     @Flag(name: .long, help: "Read CSV with a header row (name,reference,tickets).")
     var csv = false
 
+    @OptionGroup var options: WriteOptions
+
     mutating func run() throws {
-        let db = try Commis.open()
+        try options.withDatabase { db in
+            let text: String
+            do {
+                text = try String(contentsOf: URL(fileURLWithPath: file), encoding: .utf8)
+            } catch {
+                throw RaffleImportError.unreadableFile(
+                    path: file, reason: error.localizedDescription
+                )
+            }
 
-        let text: String
-        do {
-            text = try String(contentsOf: URL(fileURLWithPath: file), encoding: .utf8)
-        } catch {
-            throw RaffleImportError.unreadableFile(
-                path: file, reason: error.localizedDescription
-            )
+            let drafts = csv
+                ? try RaffleEntryImport.parseCSV(text)
+                : RaffleEntryImport.parseText(text)
+            guard !drafts.isEmpty else {
+                throw RaffleImportError.noEntries(path: file)
+            }
+
+            let inserted = try db.enter(raffleId, drafts: drafts)
+            print("Imported \(inserted.count) entries into raffle #\(raffleId).")
         }
-
-        let drafts = csv
-            ? try RaffleEntryImport.parseCSV(text)
-            : RaffleEntryImport.parseText(text)
-        guard !drafts.isEmpty else {
-            throw RaffleImportError.noEntries(path: file)
-        }
-
-        let inserted = try db.enter(raffleId, drafts: drafts)
-        print("Imported \(inserted.count) entries into raffle #\(raffleId).")
     }
 }

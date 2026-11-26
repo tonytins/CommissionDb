@@ -14,17 +14,19 @@ struct UpdateStatus: ParsableCommand {
     @Option(name: .long, help: "New status.")
     var set: Status
 
+    @OptionGroup var options: WriteOptions
+
     mutating func run() throws {
-        let db = try Commis.open()
+        try options.withDatabase { db in
+            guard var record = try db.records.find(id) else {
+                print("No record with ID \(id).")
+                throw ExitCode.failure
+            }
 
-        guard var record = try db.records.find(id) else {
-            print("No record with ID \(id).")
-            throw ExitCode.failure
+            let previous = record.status
+            record.status = set.rawValue
+            try db.update(record)
+            print("Record #\(id): \(previous) → \(set.rawValue).")
         }
-
-        let previous = record.status
-        record.status = set.rawValue
-        try db.update(record)
-        print("Record #\(id): \(previous) → \(set.rawValue).")
     }
 }
