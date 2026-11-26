@@ -8,7 +8,7 @@ struct CommisCommand: ParsableCommand {
         abstract: "Track commissions, YCH transactions, and art raffles.",
         version: GitVersion.version,
         subcommands: [
-            Add.self, List.self, Export.self, UpdateStatus.self, Raffle.self,
+            Add.self, List.self, Export.self, UpdateStatus.self, Info.self, Raffle.self,
         ],
         defaultSubcommand: List.self
     )

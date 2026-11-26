@@ -55,4 +55,9 @@ xcuserdata/
 /*.gcno
 **/xcshareddata/WorkspaceSettings.xcsettings
 
+### Local ###
+# Personal preferences and machine-specific notes, per AGENTS.md.
+*.local/
+*.local.md
+
 # End of https://www.toptal.com/developers/gitignore/api/xcode,database,visualstudiocode,swiftpackagemanager

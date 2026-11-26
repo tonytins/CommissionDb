@@ -13,9 +13,17 @@ struct List: ParsableCommand {
     @Option(name: .shortAndLong, help: "Filter by type.")
     var type: RecordType?
 
+    @Flag(name: .long, help: "Print JSON for other programs.")
+    var json = false
+
     mutating func run() throws {
         let db = try Commis.open()
         let records = try db.fetchRecords(status: status, type: type)
+
+        if json {
+            print(try JSON.records(records))
+            return
+        }
 
         guard !records.isEmpty else {
             print("No records found.")

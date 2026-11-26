@@ -14,6 +14,7 @@ commis <subcommand>
 | `list`     | List records (default subcommand) |
 | `export`   | Export records as CSV to stdout |
 | `status`   | Change the status of a record |
+| `info`     | Show the database's location, schema version, and record count |
 | `raffle`   | Create, fill, draw, and fulfill raffles |
 
 ## Storage
@@ -121,6 +122,33 @@ places.
 
 Raffles are not part of the CSV export; use `commis raffle list` and
 `commis raffle show` for raffle data.
+
+## Machine-readable output
+
+`list` and `info` take `--json` and print one line of JSON for other programs,
+such as the desktop app. Without the flag their text output is unchanged.
+
+```sh
+commis list --json --status pending
+commis info --json
+```
+
+`list --json` wraps the records in an envelope carrying the contract's version:
+
+```json
+{"records":[{"client":"Alberta Mann","date":"2026-11-22T18:13:05Z","description":"","fee":43,"id":1,"reference":"https://www.furaffinity.net/view/64746038/","slot":null,"status":"pending","title":null,"type":"commission"}],"version":1}
+```
+
+`info --json` says where the database is, which schema it uses, and how many
+records it holds:
+
+```json
+{"commis":"0.1.109","database":"/home/you/.local/share/commis/commis.sqlite3","records":16,"schema":1,"version":1}
+```
+
+Absent titles and slots are `null`, never left out. Dates are the stored ISO
+8601 strings. `version` is the contract's, not the app's, and changes only when
+a field changes meaning or goes away. A command that fails exits non-zero.
 
 ## Raffles
 
