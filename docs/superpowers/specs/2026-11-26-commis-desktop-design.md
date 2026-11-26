@@ -186,9 +186,10 @@ with roles, never with hex values in views.
 - Surfaces, text, and lines are neutral, after libadwaita; only the accent
   carries color.
 - Both light and dark are supported, and switching reaches the open window.
-- The accent is blue: libadwaita's `#3584e4` on light and `#78aeed` on dark as
-  the starting values, adjusted if the contrast test says so. Focus, selection,
-  and progress marks use it; nothing else does.
+- The accent is blue: `#1C71D8` on light and `#3584E4` on dark, libadwaita's
+  own pair. White text on either reaches 3 to 1, which the contrast test
+  checks; the lighter `#78aeed` this design started with does not. Focus,
+  selection, and progress marks use it; nothing else does.
 
 ## In the repository
 
@@ -204,9 +205,19 @@ section on building the window.
 ## Packaging
 
 Self-contained publish per platform, as S1PK does. The app looks for `commis`
-on `PATH`, then at a path set in its settings, and says plainly which of the
-two failed when it can't find it. Bundling the executable inside the app is a
-later step, and would need the Swift runtime or a static build on Linux.
+in this order, after Depot's search for its renderer:
+
+1. The `COMMIS` environment variable, when it's set.
+2. Beside the app, where a package puts it.
+3. A SwiftPM build in a checkout the app runs from: the newer of
+   `.build/release/commis` and `.build/debug/commis`, up to eight folders
+   above the app.
+4. The `PATH`.
+
+When it finds none, it says to set `COMMIS` or put `commis` on the `PATH`.
+When the one it found can't be run, it names that path and the system's
+reason. Bundling the executable inside the app is a later step, and would need
+the Swift runtime or a static build on Linux.
 
 ## Testing
 
