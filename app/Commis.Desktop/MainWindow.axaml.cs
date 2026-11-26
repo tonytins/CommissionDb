@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Chrome;
 using Avalonia.Input;
@@ -18,7 +19,10 @@ public sealed partial class MainWindow : Window
 {
     private readonly CommisClient? client;
     private readonly WindowSettings settings;
-    private readonly List<SectionItem> sectionItems = Sections.All.Select(section => new SectionItem(section)).ToList();
+    private readonly InterfaceText text;
+    private readonly List<SectionItem> sectionItems;
+    private readonly IReadOnlyList<FilterOption> filterOptions;
+    private readonly IReadOnlyList<FilterOption> statusChoices;
 
     // The filter belongs to the section, lasts while the window is open, and starts at all statuses.
     private readonly Dictionary<Section, string?> filters = [];
@@ -35,24 +39,30 @@ public sealed partial class MainWindow : Window
     private bool merged;
 
     /// <summary>Opens the window on the commis found for this computer.</summary>
-    public MainWindow() : this(CommisLocation.Find(), new WindowSettings(WindowSettings.DefaultPath))
+    public MainWindow()
+        : this(CommisLocation.Find(), new WindowSettings(WindowSettings.DefaultPath), InterfaceText.Load())
     {
     }
 
     /// <summary>Opens the window on the commis at <paramref name="commisPath"/>, or on none when it's null.</summary>
-    internal MainWindow(string? commisPath, WindowSettings settings)
+    internal MainWindow(string? commisPath, WindowSettings settings, InterfaceText text)
     {
         InitializeComponent();
 
         this.settings = settings;
-        client = commisPath is null ? null : new CommisClient(commisPath);
+        this.text = text;
+        client = commisPath is null ? null : new CommisClient(commisPath, text);
         section = settings.LoadSection();
+        sectionItems = Sections.All.Select(each => new SectionItem(each, text.Get(each.TextKey()))).ToList();
+        filterOptions = FilterOption.Filters(text);
+        statusChoices = FilterOption.Choices(text);
+        ShowText();
 
         rendering = true;
         SectionList.ItemsSource = sectionItems;
         SectionList.SelectedIndex = Sections.All.ToList().IndexOf(section);
-        FilterBox.ItemsSource = FilterOption.Filters;
-        StatusBox.ItemsSource = FilterOption.Choices;
+        FilterBox.ItemsSource = filterOptions;
+        StatusBox.ItemsSource = statusChoices;
         rendering = false;
 
         MergeTitleBar(TitleBars.Merges());
@@ -62,20 +72,65 @@ public sealed partial class MainWindow : Window
         Closed += (_, _) => watcher?.Dispose();
     }
 
+    /// <summary>Puts the interface text on everything that doesn't change while the window is open.</summary>
+    private void ShowText()
+    {
+        Title = TitleText.Text = text.Get(TextKeys.AppTitle);
+        NameButton(MinimizeButton, TextKeys.WindowMinimize);
+        NameButton(MaximizeButton, TextKeys.WindowMaximize);
+        NameButton(CloseButton, TextKeys.WindowClose);
+
+        AddButton.Content = text.Get(TextKeys.ToolbarAdd);
+        ToolTip.SetTip(AddButton, text.Get(TextKeys.ToolbarAddLater));
+        ExportButton.Content = text.Get(TextKeys.ToolbarExport);
+        ToolTip.SetTip(ExportButton, text.Get(TextKeys.ToolbarExportLater));
+        AutomationProperties.SetName(FilterBox, text.Get(TextKeys.ToolbarFilter));
+
+        AutomationProperties.SetName(SectionList, text.Get(TextKeys.SidebarName));
+        AutomationProperties.SetName(RecordList, text.Get(TextKeys.ListName));
+        ClientHeader.Text = text.Get(TextKeys.ColumnClient);
+        TitleHeader.Text = text.Get(TextKeys.ColumnTitle);
+        FeeHeader.Text = text.Get(TextKeys.ColumnFee);
+        StatusHeader.Text = text.Get(TextKeys.ColumnStatus);
+        DateHeader.Text = text.Get(TextKeys.ColumnDate);
+
+        StatusLabel.Text = text.Get(TextKeys.DetailStatus);
+        AutomationProperties.SetName(StatusBox, StatusLabel.Text);
+        FeeLabel.Text = text.Get(TextKeys.DetailFee);
+        TitleLabel.Text = text.Get(TextKeys.DetailTitle);
+        DetailSlotLabel.Text = text.Get(TextKeys.DetailSlot);
+        ReferenceLabel.Text = text.Get(TextKeys.DetailReference);
+        DescriptionLabel.Text = text.Get(TextKeys.DetailDescription);
+        AddedLabel.Text = text.Get(TextKeys.DetailAdded);
+
+        RafflesTitle.Text = text.Get(TextKeys.RafflesTitle);
+        RafflesBody.Text = text.Get(TextKeys.RafflesBody);
+        UnavailableText.Text = text.Get(TextKeys.Unavailable);
+        DismissButton.Content = text.Get(TextKeys.ProblemDismiss);
+    }
+
+    // A button that shows only a glyph is named for screen readers and tooltips alike.
+    private void NameButton(Control control, string key)
+    {
+        var name = text.Get(key);
+        AutomationProperties.SetName(control, name);
+        ToolTip.SetTip(control, name);
+    }
+
     private bool DrawsWindowButtons => merged && OperatingSystem.IsLinux() && WindowState != WindowState.FullScreen;
 
     private async Task StartAsync()
     {
         if (client is null)
         {
-            ShowProblem($"Couldn't find commis. Set {CommisLocation.Variable} to its path, or put it on the PATH.");
+            ShowProblem(text.Get(TextKeys.ProblemNotFound, CommisLocation.Variable));
             return;
         }
 
         try
         {
             var info = await client.ReadInfoAsync();
-            DatabaseText.Text = $"{info.Database} · schema {info.Schema} · commis {info.Commis}";
+            DatabaseText.Text = text.Get(TextKeys.DatabaseLine, info.Database, info.Schema, info.Commis);
             ToolTip.SetTip(DatabaseText, info.Database);
             watcher = new DatabaseWatcher(info.Database, () => Dispatcher.UIThread.Post(() => _ = RefreshAsync()));
         }
@@ -138,12 +193,12 @@ public sealed partial class MainWindow : Window
 
             FilterBox.IsEnabled = loaded && showsRecords;
             var filter = filters.GetValueOrDefault(section);
-            FilterBox.SelectedItem = FilterOption.Filters.First(option => option.Value == filter);
+            FilterBox.SelectedItem = filterOptions.First(option => option.Value == filter);
 
-            var rows = Browser.Rows(records, section, filter);
+            var rows = Browser.Rows(records, section, filter, text);
             RecordList.ItemsSource = rows;
             RecordList.SelectedItem = rows.FirstOrDefault(row => row.Id == selectedId);
-            EmptyText.Text = Browser.Empty(section, filter);
+            EmptyText.Text = Browser.Empty(section, filter, text);
             EmptyText.IsVisible = rows.Count == 0;
             RecordList.IsVisible = rows.Count > 0;
 
@@ -159,16 +214,14 @@ public sealed partial class MainWindow : Window
     {
         DetailView.IsVisible = row is not null;
         NoSelectionText.IsVisible = row is null;
-        NoSelectionText.Text = section == Section.Ych
-            ? "Select a YCH entry to see it here."
-            : "Select a commission to see it here.";
+        NoSelectionText.Text = text.Get(section == Section.Ych ? TextKeys.DetailNoneYch : TextKeys.DetailNoneCommission);
         if (row is null)
         {
             return;
         }
 
         DetailClient.Text = row.Client;
-        StatusBox.SelectedItem = FilterOption.Choices.FirstOrDefault(option => option.Value == row.Record.Status);
+        StatusBox.SelectedItem = statusChoices.FirstOrDefault(option => option.Value == row.Record.Status);
         DetailFee.Text = row.Fee;
         DetailTitle.Text = row.Title;
         DetailSlot.Text = row.Slot;
@@ -256,7 +309,7 @@ public sealed partial class MainWindow : Window
             rendering = true;
             try
             {
-                StatusBox.SelectedItem = FilterOption.Choices.FirstOrDefault(option => option.Value == row.Record.Status);
+                StatusBox.SelectedItem = statusChoices.FirstOrDefault(option => option.Value == row.Record.Status);
             }
             finally
             {

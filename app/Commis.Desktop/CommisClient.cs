@@ -11,7 +11,8 @@ namespace Commis.Desktop;
 /// validation.
 /// </summary>
 /// <param name="executable">The path to the executable.</param>
-internal sealed class CommisClient(string executable)
+/// <param name="text">The interface text its problems are told in.</param>
+internal sealed class CommisClient(string executable, InterfaceText text)
 {
     /// <summary>How long a command may take before the window gives up on it.</summary>
     internal static readonly TimeSpan Timeout = TimeSpan.FromSeconds(15);
@@ -56,7 +57,7 @@ internal sealed class CommisClient(string executable)
             cancellationToken);
         if (result.ExitCode != 0)
         {
-            throw new CommisException(Explain(result));
+            throw new CommisException(Explain(result, text));
         }
     }
 
@@ -64,7 +65,7 @@ internal sealed class CommisClient(string executable)
     /// The sentence to show for a run that produced no answer. What the command wrote on standard error comes first,
     /// then standard output when it isn't JSON, then the exit code.
     /// </summary>
-    internal static string Explain(CommandResult result)
+    internal static string Explain(CommandResult result, InterfaceText text)
     {
         if (!string.IsNullOrWhiteSpace(result.StandardError))
         {
@@ -77,19 +78,19 @@ internal sealed class CommisClient(string executable)
         }
 
         return result.ExitCode == 0
-            ? "commis printed an answer the window couldn't read."
-            : $"commis exited with {result.ExitCode}.";
+            ? text.Get(TextKeys.ProblemUnreadable)
+            : text.Get(TextKeys.ProblemExitCode, result.ExitCode);
     }
 
     // The answer wins over the exit code: a command that wrote the contract is a success whatever it returned.
-    private static T Read<T>(CommandResult result) where T : class
+    private T Read<T>(CommandResult result) where T : class
     {
         if (TryRead<T>(result.StandardOutput, out var value))
         {
             return value;
         }
 
-        throw new CommisException(Explain(result));
+        throw new CommisException(Explain(result, text));
     }
 
     private static bool TryRead<T>(string text, out T value) where T : class
@@ -146,7 +147,7 @@ internal sealed class CommisClient(string executable)
         }
         catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
         {
-            throw new CommisException($"Couldn't start commis at {Executable}: {Reason(exception)}", exception);
+            throw new CommisException(text.Get(TextKeys.ProblemCannotStart, Executable, Reason(exception)), exception);
         }
 
         var output = process.StandardOutput.ReadToEndAsync(cancellationToken);
@@ -161,7 +162,7 @@ internal sealed class CommisClient(string executable)
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             Stop(process);
-            throw new CommisException($"commis didn't answer within {Timeout.TotalSeconds:0} seconds.");
+            throw new CommisException(text.Get(TextKeys.ProblemTimeout, (int)Timeout.TotalSeconds));
         }
 
         return new CommandResult(process.ExitCode, await output, await errors);

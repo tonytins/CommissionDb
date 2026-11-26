@@ -3,7 +3,7 @@ using System.Globalization;
 namespace Commis.Desktop.Records;
 
 /// <summary>A record as the list and the detail pane show it.</summary>
-internal sealed class RecordRow(Record record)
+internal sealed class RecordRow(Record record, InterfaceText text)
 {
     /// <summary>Shown where a record has no value.</summary>
     internal const string None = "—";
@@ -26,7 +26,7 @@ internal sealed class RecordRow(Record record)
     /// <summary>The fee with two decimals and no currency, as the CLI prints it.</summary>
     public string Fee => Record.Fee.ToString("0.00", CultureInfo.CurrentCulture);
 
-    public string Status => Statuses.Display(Record.Status);
+    public string Status { get; } = Statuses.Display(record.Status, text);
 
     /// <summary>The day it was added, in local time, or the stored text when it isn't a date.</summary>
     public string Date => Dates.Short(Record.Date);

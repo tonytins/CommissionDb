@@ -1,0 +1,67 @@
+// Commis's interface text, in English. Other languages lay their own
+// _100_commis.cst over this one, in uitext/<language>.dir, and any value they
+// leave out or leave empty falls back to this table. %s and %d are filled in
+// by the app.
+
+// The window
+app title ^Commis^
+window minimize ^Minimize^
+window maximize ^Maximize^
+window close ^Close^
+
+// The toolbar
+toolbar add ^Add^
+toolbar add later ^Adding comes in a later version.^
+toolbar export ^Export^
+toolbar export later ^Exporting comes in a later version.^
+toolbar filter ^Status filter^
+filter all ^All statuses^
+
+// Statuses
+status pending ^Pending^
+status paid ^Paid^
+status cancelled ^Cancelled^
+status refunded ^Refunded^
+
+// The sidebar
+sidebar name ^Sections^
+section commissions ^Commissions^
+section ych ^YCH^
+section raffles ^Raffles^
+
+// The record list
+list name ^Records^
+column client ^Client^
+column title ^Title^
+column fee ^Fee^
+column status ^Status^
+column date ^Date^
+empty commissions ^No commissions yet.^
+empty commissions filtered ^No %s commissions.^
+empty ych ^No YCH entries yet.^
+empty ych filtered ^No %s YCH entries.^
+
+// The detail pane
+detail status ^Status^
+detail fee ^Fee^
+detail title ^Title^
+detail slot ^Slot^
+detail reference ^Reference^
+detail description ^Description^
+detail added ^Added^
+detail none commission ^Select a commission to see it here.^
+detail none ych ^Select a YCH entry to see it here.^
+
+// Raffles
+raffles title ^Raffles aren't in the window yet^
+raffles body ^Raffles have the most steps of anything in Commis, so the window starts with commissions and YCH. Until raffles arrive here, run commis raffle in a terminal.^
+
+// The database and its problems
+database line ^%s · schema %d · commis %s^
+unavailable ^Nothing to show until commis answers.^
+problem dismiss ^Dismiss^
+problem not found ^Couldn't find commis. Set %s to its path, or put it on the PATH.^
+problem cannot start ^Couldn't start commis at %s: %s^
+problem timeout ^commis didn't answer within %d seconds.^
+problem unreadable ^commis printed an answer the window couldn't read.^
+problem exit code ^commis exited with %d.^

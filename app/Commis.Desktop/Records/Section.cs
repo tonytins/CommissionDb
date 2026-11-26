@@ -14,12 +14,12 @@ internal static class Sections
     /// <summary>Every section, in sidebar order. Commissions comes first and is where a first run opens.</summary>
     internal static IReadOnlyList<Section> All { get; } = [Section.Commissions, Section.Ych, Section.Raffles];
 
-    /// <summary>The section's name in the sidebar.</summary>
-    internal static string Name(this Section section) => section switch
+    /// <summary>The key of the section's name in the sidebar.</summary>
+    internal static string TextKey(this Section section) => section switch
     {
-        Section.Commissions => "Commissions",
-        Section.Ych => "YCH",
-        Section.Raffles => "Raffles",
+        Section.Commissions => TextKeys.SectionCommissions,
+        Section.Ych => TextKeys.SectionYch,
+        Section.Raffles => TextKeys.SectionRaffles,
         _ => throw new ArgumentOutOfRangeException(nameof(section), section, null),
     };
 

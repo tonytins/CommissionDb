@@ -7,13 +7,13 @@ namespace Commis.Desktop;
 /// A row in the sidebar: a section and its total, or no count where it has none. The count changes in place so a
 /// refresh doesn't disturb the selection.
 /// </summary>
-internal sealed class SectionItem(Section section) : INotifyPropertyChanged
+internal sealed class SectionItem(Section section, string name) : INotifyPropertyChanged
 {
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public Section Section { get; } = section;
 
-    public string Name => Section.Name();
+    public string Name { get; } = name;
 
     public string Count
     {
@@ -33,12 +33,10 @@ internal sealed class SectionItem(Section section) : INotifyPropertyChanged
 internal sealed record FilterOption(string? Value, string Label)
 {
     /// <summary>The filter's choices: all statuses, then each one.</summary>
-    internal static IReadOnlyList<FilterOption> Filters { get; } =
-    [
-        new(null, "All statuses"),
-        .. Statuses.All.Select(status => new FilterOption(status, Statuses.Display(status))),
-    ];
+    internal static IReadOnlyList<FilterOption> Filters(InterfaceText text) =>
+        [new(null, text.Get(TextKeys.FilterAll)), .. Choices(text)];
 
     /// <summary>The statuses a record can be set to.</summary>
-    internal static IReadOnlyList<FilterOption> Choices { get; } = Filters.Skip(1).ToList();
+    internal static IReadOnlyList<FilterOption> Choices(InterfaceText text) =>
+        Statuses.All.Select(status => new FilterOption(status, Statuses.Display(status, text))).ToList();
 }

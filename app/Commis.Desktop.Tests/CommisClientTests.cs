@@ -13,7 +13,7 @@ public sealed class CommisClientTests : IDisposable
     {
         var result = new CommandResult(64, "something else\n", "Error: Missing expected argument '--set <set>'\n");
 
-        Assert.Equal("Error: Missing expected argument '--set <set>'", CommisClient.Explain(result));
+        Assert.Equal("Error: Missing expected argument '--set <set>'", CommisClient.Explain(result, Shipped.English));
     }
 
     [Fact]
@@ -22,7 +22,7 @@ public sealed class CommisClientTests : IDisposable
         // commis status prints this to standard output, then exits 1.
         var result = new CommandResult(1, "No record with ID 99.\n", "");
 
-        Assert.Equal("No record with ID 99.", CommisClient.Explain(result));
+        Assert.Equal("No record with ID 99.", CommisClient.Explain(result, Shipped.English));
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public sealed class CommisClientTests : IDisposable
     {
         var result = new CommandResult(1, "{\"version\":1}", "");
 
-        Assert.Equal("commis exited with 1.", CommisClient.Explain(result));
+        Assert.Equal("commis exited with 1.", CommisClient.Explain(result, Shipped.English));
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public sealed class CommisClientTests : IDisposable
     {
         var result = new CommandResult(0, "", "");
 
-        Assert.Equal("commis printed an answer the window couldn't read.", CommisClient.Explain(result));
+        Assert.Equal("commis printed an answer the window couldn't read.", CommisClient.Explain(result, Shipped.English));
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public sealed class CommisClientTests : IDisposable
     {
         var client = new CommisClient(Script("""
             printf '%s' '{"commis":"0.1.110","database":"\/data\/commis.sqlite3","records":2,"schema":1,"version":1}'
-            """));
+            """), Shipped.English);
 
         var info = await client.ReadInfoAsync(TestContext.Current.CancellationToken);
 
@@ -58,7 +58,7 @@ public sealed class CommisClientTests : IDisposable
     {
         var client = new CommisClient(Script("""
             printf '%s' '{"commis":"0.2.100","database":"/d","records":0,"schema":2,"version":1,"later":true}'
-            """));
+            """), Shipped.English);
 
         var info = await client.ReadInfoAsync(TestContext.Current.CancellationToken);
 
@@ -70,7 +70,7 @@ public sealed class CommisClientTests : IDisposable
     {
         var client = new CommisClient(Script("""
             printf '%s' '{"version":1,"records":[{"id":1,"date":"2026-11-26T10:00:00Z","type":"commission","client":"Bessie","reference":"r","description":"","fee":25.5,"title":null,"slot":null,"status":"paid"}]}'
-            """));
+            """), Shipped.English);
 
         var records = await client.ListRecordsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
@@ -87,7 +87,7 @@ public sealed class CommisClientTests : IDisposable
         var client = new CommisClient(Script("""
             printf '%s\n' "$@" >&2
             exit 1
-            """));
+            """), Shipped.English);
 
         var problem = await Assert.ThrowsAsync<CommisException>(() =>
             client.ListRecordsAsync("paid", "ych", TestContext.Current.CancellationToken));
@@ -101,7 +101,7 @@ public sealed class CommisClientTests : IDisposable
         var client = new CommisClient(Script("""
             echo "Couldn't open the database: disk I/O error" >&2
             exit 1
-            """));
+            """), Shipped.English);
 
         var problem = await Assert.ThrowsAsync<CommisException>(() =>
             client.ReadInfoAsync(TestContext.Current.CancellationToken));
@@ -116,7 +116,7 @@ public sealed class CommisClientTests : IDisposable
         var client = new CommisClient(Script($"""
             printf '%s\n' "$@" > '{log}'
             echo 'Record #7: pending → paid.'
-            """));
+            """), Shipped.English);
 
         await client.SetStatusAsync(7, "paid", TestContext.Current.CancellationToken);
 
@@ -130,7 +130,7 @@ public sealed class CommisClientTests : IDisposable
         var client = new CommisClient(Script("""
             echo 'No record with ID 99.'
             exit 1
-            """));
+            """), Shipped.English);
 
         var problem = await Assert.ThrowsAsync<CommisException>(() =>
             client.SetStatusAsync(99, "paid", TestContext.Current.CancellationToken));
@@ -142,7 +142,7 @@ public sealed class CommisClientTests : IDisposable
     public async Task AMissingExecutableSaysWhere()
     {
         var missing = Path.Combine(root.FullName, "nothing-here");
-        var client = new CommisClient(missing);
+        var client = new CommisClient(missing, Shipped.English);
 
         var problem = await Assert.ThrowsAsync<CommisException>(() =>
             client.ReadInfoAsync(TestContext.Current.CancellationToken));

@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Commis.Desktop.Records;
 
 /// <summary>
@@ -14,7 +16,11 @@ internal static class Browser
     /// <summary>
     /// The section's records with <paramref name="status"/>, or all of them when it's null, newest first.
     /// </summary>
-    internal static IReadOnlyList<RecordRow> Rows(IEnumerable<Record> records, Section section, string? status)
+    internal static IReadOnlyList<RecordRow> Rows(
+        IEnumerable<Record> records,
+        Section section,
+        string? status,
+        InterfaceText text)
     {
         if (section.RecordType() is not { } type)
         {
@@ -25,14 +31,21 @@ internal static class Browser
             .Where(record => record.Type == type && (status is null || record.Status == status))
             .OrderByDescending(record => record.Date, StringComparer.Ordinal)
             .ThenByDescending(record => record.Id)
-            .Select(record => new RecordRow(record))
+            .Select(record => new RecordRow(record, text))
             .ToList();
     }
 
     /// <summary>What an empty list says, naming the filter it's under.</summary>
-    internal static string Empty(Section section, string? status)
+    internal static string Empty(Section section, string? status, InterfaceText text)
     {
-        var things = section == Section.Ych ? "YCH entries" : "commissions";
-        return status is null ? $"No {things} yet." : $"No {status} {things}.";
+        var ych = section == Section.Ych;
+        if (status is null)
+        {
+            return text.Get(ych ? TextKeys.EmptyYch : TextKeys.EmptyCommissions);
+        }
+
+        // The status reads mid-sentence, so in lower case: "No paid commissions."
+        var name = Statuses.Display(status, text).ToLower(CultureInfo.CurrentCulture);
+        return text.Get(ych ? TextKeys.EmptyYchFiltered : TextKeys.EmptyCommissionsFiltered, name);
     }
 }

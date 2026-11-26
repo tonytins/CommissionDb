@@ -17,6 +17,12 @@
     <PackageReference Include="Avalonia" Version="12.1.5" />
     <PackageReference Include="Avalonia.Desktop" Version="12.1.5" />
     <PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.5" />
+    <!-- Interface text in .cst tables, as S1PK keeps it. -->
+    <PackageReference Include="CSTNet" Version="2.1.200" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="uitext\**\*.cst" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
