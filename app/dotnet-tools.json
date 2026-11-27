@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "kuiperzone.pupnet": {
+      "version": "1.10.0",
+      "commands": [
+        "pupnet"
+      ],
+      "rollForward": false
+    }
+  }
+}
